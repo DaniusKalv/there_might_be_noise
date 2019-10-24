@@ -77,7 +77,7 @@ void sleep_mode_enter(void)
 {
 	ret_code_t err_code;
 
-	NRF_LOG_INFO("Sleep mode enter");
+	NRF_LOG_INFO("Sleep mode entero");
 
 	NRF_LOG_FINAL_FLUSH();
 
