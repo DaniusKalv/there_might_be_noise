@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"ble_config.h": "c",
+			"boards.h": "c",
+			"dk_ble_dis.h": "c",
+			"dk_twi.h": "c",
+			"stdbool.h": "c",
+			"stdint.h": "c"
+		}
+	}
+}
