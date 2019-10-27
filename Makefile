@@ -23,12 +23,12 @@ DFU_DIRECTORY             := $(OUTPUT_DIRECTORY)/_dfu
 HEX_DIRECTORY             := $(OUTPUT_DIRECTORY)/_hex
 
 LIB_ROOT := ../../dk_c_lib
-SDK_ROOT := ../_SDK/nRF5_SDK_15.3.0_59ac345
+SDK_ROOT := ../_SDK/nRF5_SDK_16.0.0_98a08e2
 PROJ_DIR := .
 
 # Soft device
 SOFT_DEVICE_PATH  := $(SDK_ROOT)/components/softdevice/s140/hex/
-SOFT_DEVICE_NAME  := s140_nrf52_6.1.1_softdevice.hex
+SOFT_DEVICE_NAME  := s140_nrf52_7.0.1_softdevice.hex
 SOFT_DEVICE       := $(SOFT_DEVICE_PATH)$(SOFT_DEVICE_NAME)
 
 # Application
@@ -36,7 +36,7 @@ APPLICATION_DEBUG   := $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_debug.hex
 APPLICATION_RELEASE := $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_release.hex
 
 # Bootloader
-BOOTLOADER          := ../nrf52_bootloader/pro_cassette_v5/_build/secure_bootloader_THERE_MIGHT_BE_NOISE_V1_release.hex
+BOOTLOADER          := ../nrf52_bootloader/dk_010017/_build/secure_bootloader_THERE_MIGHT_BE_NOISE_V1_release.hex
 
 # Configuration files
 SDK_CONFIG_FILE   := ./config/sdk_config.h
@@ -62,7 +62,8 @@ SRC_FILES += \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis/dk_ble_dis.c \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi/dk_twi.c \
-  $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52.S \
+  $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106/tlv320aic3106.c \
+  $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_uart.c \
@@ -92,7 +93,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
-  $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
+  $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
@@ -143,10 +144,11 @@ INC_FOLDERS += \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis \
   $(LIB_ROOT)/nordic/components/boards \
   $(LIB_ROOT)/nordic/components/bootloader \
+  $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106 \
   $(LIB_ROOT)/nordic/components/drivers_nrf \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi \
   $(LIB_ROOT)/common/components/ble/dk_ble_uuids \
-  $(SDK_ROOT)/components/softdevice/s132/headers/nrf52 \
+  $(SDK_ROOT)/components/softdevice/s140/headers/nrf52 \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/modules/nrfx/mdk \
@@ -273,15 +275,16 @@ CFLAGS += -DDEVICE_APP_ID=$(APP_ID)
 CFLAGS += -DDEVICE_APP_V=$(APP_VERSION)
 CFLAGS += -DHW_ID=$(HW_ID)
 CFLAGS += -DHW_VERSION=$(HW_VERSION)
+CFLAGS += -DAPP_TIMER_V2
+CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DNRF_DFU_SVCI_ENABLED
 CFLAGS += -DNRF_DFU_SETTINGS_VERSION=$(BOOTLOADER_SETTINGS_VERSION)
 CFLAGS += -DNRF_DFU_TRANSPORT_BLE=1
-CFLAGS += -DNRF_SD_BLE_API_VERSION=6
+CFLAGS += -DNRF_SD_BLE_API_VERSION=7
 CFLAGS += -DS140
 CFLAGS += -DSOFTDEVICE_PRESENT
-CFLAGS += -DSWI_DISABLE0
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -Wall
@@ -295,6 +298,8 @@ ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+ASMFLAGS += -DAPP_TIMER_V2
+ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 ASMFLAGS += -D$(BOARD)
 ASMFLAGS += -DDEVICE_APP_ID=$(APP_ID)
 ASMFLAGS += -DDEVICE_APP_V=$(APP_VERSION)
@@ -305,10 +310,9 @@ ASMFLAGS += -DNRF52840_XXAA
 ASMFLAGS += -DNRF_DFU_SVCI_ENABLED
 ASMFLAGS += -DNRF_DFU_SETTINGS_VERSION=$(BOOTLOADER_SETTINGS_VERSION)
 ASMFLAGS += -DNRF_DFU_TRANSPORT_BLE=1
-ASMFLAGS += -DNRF_SD_BLE_API_VERSION=6
+ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
 ASMFLAGS += -DS140
 ASMFLAGS += -DSOFTDEVICE_PRESENT
-ASMFLAGS += -DSWI_DISABLE0
 
 # Linker flags
 LDFLAGS += $(OPT)
