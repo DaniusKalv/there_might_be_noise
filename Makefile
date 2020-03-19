@@ -1,4 +1,4 @@
-BOARD               := DK_010017
+BOARD               := DK_01017
 PROJECT_NAME        := there_might_be_noise
 FULL_PROJECT_NAME   := $(PROJECT_NAME)_$(BOARD)
 TARGETS             := $(FULL_PROJECT_NAME)_debug $(FULL_PROJECT_NAME)_release
@@ -9,7 +9,7 @@ APP_ID                      := 1
 APP_VERSION                 := 1
 BOOTLOADER_VERSION          := 1
 BOOTLOADER_SETTINGS_VERSION := 1
-HW_ID                       := 1
+HW_ID                       := 17
 HW_VERSION                  := 1
 SD_REQ                      := 0xb7
 SD_ID                       := 0xb7
@@ -22,7 +22,7 @@ BOOT_SETTINGS_DIRECTORY   := $(OUTPUT_DIRECTORY)/_boot_settings
 DFU_DIRECTORY             := $(OUTPUT_DIRECTORY)/_dfu
 HEX_DIRECTORY             := $(OUTPUT_DIRECTORY)/_hex
 
-LIB_ROOT := ../../dk_c_lib
+LIB_ROOT := ./libs/dk_c_lib
 SDK_ROOT := ../_SDK/nRF5_SDK_16.0.0_98a08e2
 PROJ_DIR := .
 
@@ -60,9 +60,12 @@ SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(LIB_ROOT)/nordic/components/uicr/dk_uicr.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
+  $(LIB_ROOT)/nordic/components/ble/dk_ble_gap/dk_ble_gap.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis/dk_ble_dis.c \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi/dk_twi.c \
   $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106/tlv320aic3106.c \
+  $(LIB_ROOT)/nordic/modules/dk_battery_lvl/dk_battery_lvl.c \
+  $(LIB_ROOT)/nordic/modules/dk_twi_mngr/dk_twi_mngr.c \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
@@ -141,6 +144,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/config \
   $(LIB_ROOT)/nordic/components/uicr \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising \
+  $(LIB_ROOT)/nordic/components/ble/dk_ble_gap \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis \
   $(LIB_ROOT)/nordic/components/boards \
   $(LIB_ROOT)/nordic/components/bootloader \
@@ -148,6 +152,9 @@ INC_FOLDERS += \
   $(LIB_ROOT)/nordic/components/drivers_nrf \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi \
   $(LIB_ROOT)/common/components/ble/dk_ble_uuids \
+  $(LIB_ROOT)/nordic/components/util \
+  $(LIB_ROOT)/nordic/modules/dk_battery_lvl \
+  $(LIB_ROOT)/nordic/modules/dk_twi_mngr \
   $(SDK_ROOT)/components/softdevice/s140/headers/nrf52 \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
