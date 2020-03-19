@@ -1,0 +1,4 @@
+[submodule "libs/dk_c_lib"]
+	path = libs/dk_c_lib
+	url = git@gitlab.com:DaniusKalv/dk_c_lib.git
+	branch = master
