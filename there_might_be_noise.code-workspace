@@ -11,7 +11,9 @@
 			"dk_ble_dis.h": "c",
 			"dk_twi.h": "c",
 			"stdbool.h": "c",
-			"stdint.h": "c"
+			"stdint.h": "c",
+			"dk_01017.h": "c",
+			"tlv320aic3106.h": "c"
 		}
 	}
 }

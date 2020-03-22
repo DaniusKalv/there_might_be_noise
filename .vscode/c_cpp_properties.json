@@ -53,7 +53,8 @@
                 "${workspaceFolder}/libs/dk_c_lib/nordic/modules/dk_battery_lvl",
                 "${workspaceFolder}/libs/dk_c_lib/nordic/components/ble/dk_ble_advertising",
                 "${workspaceFolder}/libs/dk_c_lib/nordic/components/ble/dk_ble_gap",
-                "${workspaceFolder}/libs/dk_c_lib/nordic/components/drivers_nrf/dk_twi"
+                "${workspaceFolder}/libs/dk_c_lib/nordic/components/drivers_nrf/dk_twi",
+                "${workspaceFolder}/libs/dk_c_lib/nordic/components/drivers_ext/tlv320aic3106"
             ],
             "browse": {
                 "path": [

@@ -64,7 +64,6 @@ SRC_FILES += \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis/dk_ble_dis.c \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi/dk_twi.c \
   $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106/tlv320aic3106.c \
-  $(LIB_ROOT)/nordic/modules/dk_battery_lvl/dk_battery_lvl.c \
   $(LIB_ROOT)/nordic/modules/dk_twi_mngr/dk_twi_mngr.c \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
@@ -92,6 +91,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/fstorage/nrf_fstorage.c \
   $(SDK_ROOT)/components/libraries/fstorage/nrf_fstorage_sd.c \
   $(SDK_ROOT)/components/libraries/memobj/nrf_memobj.c \
+  $(SDK_ROOT)/components/libraries/mem_manager/mem_manager.c \
+  $(SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(SDK_ROOT)/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c \
   $(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
@@ -153,7 +154,6 @@ INC_FOLDERS += \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi \
   $(LIB_ROOT)/common/components/ble/dk_ble_uuids \
   $(LIB_ROOT)/nordic/components/util \
-  $(LIB_ROOT)/nordic/modules/dk_battery_lvl \
   $(LIB_ROOT)/nordic/modules/dk_twi_mngr \
   $(SDK_ROOT)/components/softdevice/s140/headers/nrf52 \
   $(SDK_ROOT)/modules/nrfx/hal \
