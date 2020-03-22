@@ -43,7 +43,6 @@
 #include "peer_manager.h"
 #include "dk_ble_dis.h"
 #include "dk_twi_mngr.h"
-#include "dk_battery_lvl.h"
 
 #include "dk_ble_advertising.h"
 #include "dk_ble_gap.h"
@@ -51,6 +50,8 @@
 #include "dk_ble_dis.h"
 
 #include "dk_twi.h"
+
+#include "tlv320aic3106.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -61,9 +62,13 @@
 #define SCHED_EVENT_DATA_SIZE   32
 #define SCHED_QUEUE_SIZE        16
 
+#define TWI_MNGR_QUEUE_SIZE     16
+
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
-// DK_TWI_MNGR_DEF(m_twi_mngr_mlx_led, TWI_MNGR_QUEUE_SIZE, DK_BSP_MLX9061_I2C_ITERFACE);
+
+DK_TWI_MNGR_DEF(m_twi_mngr_codec, TWI_MNGR_QUEUE_SIZE, DK_BSP_TLV320_I2C_ITERFACE);
+TLV320AIC3106_DEF(m_tlv320aic3106, &m_twi_mngr_codec, DK_BSP_TLV320_I2C_ADDRESS);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -642,6 +647,22 @@ static void timers_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
+ret_code_t twi_mngr_init(dk_twi_mngr_t const * p_dk_twi_mngr,
+                         uint32_t scl_pin,
+                         uint32_t sda_pin)
+{
+	nrfx_twi_config_t twi_config =
+	{
+		.frequency          = (nrf_twi_frequency_t)NRFX_TWI_DEFAULT_CONFIG_FREQUENCY,
+		.scl                = scl_pin,
+		.sda                = sda_pin,
+		.interrupt_priority = NRFX_TWI_DEFAULT_CONFIG_IRQ_PRIORITY,
+		.hold_bus_uninit    = NRFX_TWI_DEFAULT_CONFIG_HOLD_BUS_UNINIT,
+	};
+
+	return dk_twi_mngr_init(p_dk_twi_mngr, &twi_config);
+}
+
 #ifdef DEBUG
 /**@brief Function for initializing the nrf log module.
  */
@@ -674,7 +695,25 @@ int main(void)
 	
 	timers_init();
 
+	nrf_gpio_cfg_output(DK_BSP_TLV320_RST);
+	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
+	nrf_gpio_cfg_output(DK_BSP_TPA3220_MUTE);
+	nrf_gpio_cfg_output(DK_BSP_TPA3220_HEAD);
+
+	nrf_gpio_pin_clear(DK_BSP_TLV320_RST);
+	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
+	nrf_delay_ms(1);
+	nrf_gpio_pin_set(DK_BSP_TLV320_RST);
+	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+
 	err_code = nrfx_gpiote_init();
+	APP_ERROR_CHECK(err_code);
+
+	err_code = twi_mngr_init(&m_twi_mngr_codec, DK_BSP_I2C_SCL0, DK_BSP_I2C_SDA0);
+	APP_ERROR_CHECK(err_code);
+
+	err_code = tlv320aic3106_init(&m_tlv320aic3106, NULL);
 	APP_ERROR_CHECK(err_code);
 
 	power_management_init();
