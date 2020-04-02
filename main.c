@@ -686,26 +686,35 @@ int main(void)
 	ret_code_t err_code;
 	bool erase_bonds = false;
 
-	// Initialize.
-	#ifdef DEBUG
+#ifdef DEBUG
 	log_init();
-	#endif
-	
+#endif
+
 	NRF_LOG_DEBUG("Log initialised.");
-	
+	NRF_LOG_PROCESS();
+
 	timers_init();
 
 	nrf_gpio_cfg_output(DK_BSP_TLV320_RST);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
-	nrf_gpio_cfg_output(DK_BSP_TPA3220_MUTE);
+	// nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_HEAD);
+	nrf_gpio_pin_clear(DK_BSP_TPA3220_HEAD);
+
+	nrf_gpio_cfg_input(DK_BSP_TPA3220_FAULT, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(DK_BSP_TPA3220_OTW_CLIP, NRF_GPIO_PIN_NOPULL);
 
 	nrf_gpio_pin_clear(DK_BSP_TLV320_RST);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
-	nrf_delay_ms(1);
+
+	nrf_delay_ms(100);
 	nrf_gpio_pin_set(DK_BSP_TLV320_RST);
 	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
-	nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+	// while(true)
+	// {
+	// 	nrf_delay_ms(10000);
+	// }
 
 	err_code = nrfx_gpiote_init();
 	APP_ERROR_CHECK(err_code);
@@ -747,6 +756,8 @@ int main(void)
 	for (;;)
 	{
 		app_sched_execute();
+		// NRF_LOG_INFO("Fault %u OTW %u", nrf_gpio_pin_read(DK_BSP_TPA3220_FAULT), nrf_gpio_pin_read(DK_BSP_TPA3220_OTW_CLIP));
 		idle_state_handle();
+		// nrf_delay_ms(100);
 	}
 }

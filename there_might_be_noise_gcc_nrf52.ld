@@ -5,10 +5,11 @@ GROUP(-lgcc -lc -lnosys)
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x26000, LENGTH = 0x5a000
-  RAM (rwx) :  ORIGIN = 0x20002230, LENGTH = 0xddd0
+  FLASH (rx) : ORIGIN = 0x27000, LENGTH = 0xd9000
+  RAM (rwx) :  ORIGIN = 0x20002280, LENGTH = 0x3dd80
   DK_BOOTLOADER_DATA(r) : ORIGIN = 0x0007F008, LENGTH = 0x4
   DK_UICR_HW_INFO   (r) : ORIGIN = 0x10001080, LENGTH = 0x4
+  DK_UICR_REGOUT0   (r) : ORIGIN = 0x10001304, LENGTH = 0x4
 }
 
 SECTIONS
@@ -23,6 +24,10 @@ SECTIONS
   {
     KEEP(*(.dk_uicr_hw_info))
   } > DK_UICR_HW_INFO
+  .dk_uicr_regout0 :
+  {
+    KEEP(*(.dk_uicr_regout0))
+  } > DK_UICR_REGOUT0
 }
 
 SECTIONS
