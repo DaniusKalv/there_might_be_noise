@@ -74,7 +74,7 @@ TLV320AIC3106_DEF(m_tlv320aic3106, &m_twi_mngr_codec, DK_BSP_TLV320_I2C_ADDRESS)
 
 static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SPI instance. */
 
-SH1106_DEF(m_display, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, &m_spi);
+SH1106_DEF(m_display, &m_spi, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, 128, 64);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
