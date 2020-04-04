@@ -702,6 +702,7 @@ int main(void)
 	timers_init();
 
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
+	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
 	// nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_HEAD);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_HEAD);
@@ -709,7 +710,6 @@ int main(void)
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_FAULT, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_OTW_CLIP, NRF_GPIO_PIN_NOPULL);
 
-	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
 
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
@@ -737,6 +737,8 @@ int main(void)
 
 	err_code = codec_init(&m_twi_mngr_codec);
 	APP_ERROR_CHECK(err_code);
+
+nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 
 	power_management_init();
 

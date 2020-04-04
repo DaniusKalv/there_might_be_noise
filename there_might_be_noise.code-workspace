@@ -19,7 +19,11 @@
 			"nrfx_common.h": "c",
 			"nrfx_config.h": "c",
 			"sh1106-internal.h": "c",
-			"nrf_delay.h": "c"
+			"nrf_delay.h": "c",
+			"app_usbd_audio.h": "c",
+			"app_usbd_audio_desc.h": "c",
+			"app_usbd_descriptor.h": "c",
+			"tlv320aic3106-internal.h": "c"
 		}
 	}
 }
