@@ -51,9 +51,10 @@
 
 #include "dk_twi.h"
 
-#include "tlv320aic3106.h"
 #include "sh1106.h"
 #include "splash.h"
+
+#include "codec.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -70,7 +71,6 @@ NRF_BLE_GATT_DEF(m_gatt);                                                       
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
 DK_TWI_MNGR_DEF(m_twi_mngr_codec, TWI_MNGR_QUEUE_SIZE, DK_BSP_TLV320_I2C_ITERFACE);
-TLV320AIC3106_DEF(m_tlv320aic3106, &m_twi_mngr_codec, DK_BSP_TLV320_I2C_ADDRESS);
 
 static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SPI instance. */
 
@@ -701,7 +701,6 @@ int main(void)
 
 	timers_init();
 
-	nrf_gpio_cfg_output(DK_BSP_TLV320_RST);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
 	// nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_HEAD);
@@ -710,12 +709,9 @@ int main(void)
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_FAULT, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_OTW_CLIP, NRF_GPIO_PIN_NOPULL);
 
-	nrf_gpio_pin_clear(DK_BSP_TLV320_RST);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
 
-	nrf_delay_ms(100);
-	nrf_gpio_pin_set(DK_BSP_TLV320_RST);
-	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// while(true)
 	// {
@@ -739,7 +735,7 @@ int main(void)
 	err_code = twi_mngr_init(&m_twi_mngr_codec, DK_BSP_I2C_SCL0, DK_BSP_I2C_SDA0);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = tlv320aic3106_init(&m_tlv320aic3106, NULL);
+	err_code = codec_init(&m_twi_mngr_codec);
 	APP_ERROR_CHECK(err_code);
 
 	power_management_init();

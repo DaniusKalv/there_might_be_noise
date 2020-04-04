@@ -55,7 +55,8 @@
                 "${workspaceFolder}/libs/dk_c_lib/nordic/components/util",
                 "C:/Users/Danius/Documents/EDE/embedded_workspace/nordic_workspace/_SDK/nRF5_SDK_16.0.0_98a08e2/integration/nrfx",
                 "${workspaceFolder}/libs/dk_c_lib/nordic/components/drivers_ext/sh1106",
-                "${workspaceFolder}/ui"
+                "${workspaceFolder}/ui",
+                "${workspaceFolder}/app/codec"
             ],
             "browse": {
                 "path": [

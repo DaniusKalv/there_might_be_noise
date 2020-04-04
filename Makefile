@@ -58,6 +58,7 @@ $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_release.out: \
 # Source files common to all targets
 SRC_FILES += \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/app/codec/codec.c \
   $(LIB_ROOT)/nordic/components/uicr/dk_uicr.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_gap/dk_ble_gap.c \
@@ -144,6 +145,7 @@ SRC_FILES += \
 # Include folders common to all targets
 INC_FOLDERS += \
   $(PROJ_DIR) \
+  $(PROJ_DIR)/app/codec \
   $(PROJ_DIR)/config \
   $(PROJ_DIR)/ui \
   $(LIB_ROOT)/nordic/components/uicr \
