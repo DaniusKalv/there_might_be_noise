@@ -715,7 +715,7 @@ int main(void)
 
 	nrf_delay_ms(100);
 	nrf_gpio_pin_set(DK_BSP_TLV320_RST);
-	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// while(true)
 	// {
