@@ -53,6 +53,7 @@
 
 #include "tlv320aic3106.h"
 #include "sh1106.h"
+#include "splash.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -729,6 +730,8 @@ int main(void)
 
 	err_code = sh1106_init(&m_display);
 	APP_ERROR_CHECK(err_code);
+
+	sh1106_write_data(&m_display, splash_image, sizeof(splash_image));
 
 	err_code = nrfx_gpiote_init();
 	APP_ERROR_CHECK(err_code);

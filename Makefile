@@ -145,6 +145,7 @@ SRC_FILES += \
 INC_FOLDERS += \
   $(PROJ_DIR) \
   $(PROJ_DIR)/config \
+  $(PROJ_DIR)/ui \
   $(LIB_ROOT)/nordic/components/uicr \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_gap \
