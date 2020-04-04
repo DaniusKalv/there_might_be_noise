@@ -64,6 +64,7 @@ SRC_FILES += \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_services/dk_ble_dis/dk_ble_dis.c \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi/dk_twi.c \
   $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106/tlv320aic3106.c \
+  $(LIB_ROOT)/nordic/components/drivers_ext/sh1106/sh1106.c \
   $(LIB_ROOT)/nordic/modules/dk_twi_mngr/dk_twi_mngr.c \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
@@ -105,6 +106,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_timer.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
@@ -150,6 +152,7 @@ INC_FOLDERS += \
   $(LIB_ROOT)/nordic/components/boards \
   $(LIB_ROOT)/nordic/components/bootloader \
   $(LIB_ROOT)/nordic/components/drivers_ext/tlv320aic3106 \
+  $(LIB_ROOT)/nordic/components/drivers_ext/sh1106 \
   $(LIB_ROOT)/nordic/components/drivers_nrf \
   $(LIB_ROOT)/nordic/components/drivers_nrf/dk_twi \
   $(LIB_ROOT)/common/components/ble/dk_ble_uuids \
@@ -221,7 +224,6 @@ INC_FOLDERS += \
   $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/components/nfc/t4t_parser/tlv \
   $(SDK_ROOT)/components/libraries/sortlist \
-  $(SDK_ROOT)/components/libraries/spi_mngr \
   $(SDK_ROOT)/components/libraries/stack_guard \
   $(SDK_ROOT)/components/libraries/led_softblink \
   $(SDK_ROOT)/components/nfc/ndef/conn_hand_parser \

@@ -13,7 +13,13 @@
 			"stdbool.h": "c",
 			"stdint.h": "c",
 			"dk_01017.h": "c",
-			"tlv320aic3106.h": "c"
+			"tlv320aic3106.h": "c",
+			"sdk_macros.h": "c",
+			"nrfx.h": "c",
+			"nrfx_common.h": "c",
+			"nrfx_config.h": "c",
+			"sh1106-internal.h": "c",
+			"nrf_delay.h": "c"
 		}
 	}
 }

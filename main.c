@@ -52,6 +52,7 @@
 #include "dk_twi.h"
 
 #include "tlv320aic3106.h"
+#include "sh1106.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -69,6 +70,10 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 
 DK_TWI_MNGR_DEF(m_twi_mngr_codec, TWI_MNGR_QUEUE_SIZE, DK_BSP_TLV320_I2C_ITERFACE);
 TLV320AIC3106_DEF(m_tlv320aic3106, &m_twi_mngr_codec, DK_BSP_TLV320_I2C_ADDRESS);
+
+static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SPI instance. */
+
+SH1106_DEF(m_display, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, &m_spi);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -709,12 +714,21 @@ int main(void)
 
 	nrf_delay_ms(100);
 	nrf_gpio_pin_set(DK_BSP_TLV320_RST);
-	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// while(true)
 	// {
 	// 	nrf_delay_ms(10000);
 	// }
+
+	nrfx_spi_config_t spi_config = NRFX_SPI_DEFAULT_CONFIG;
+	spi_config.mosi_pin = DK_BSP_OLED_MOSI;
+	spi_config.sck_pin  = DK_BSP_OLED_SCLK;
+	err_code = nrfx_spi_init(&m_spi, &spi_config, NULL, NULL);
+	APP_ERROR_CHECK(err_code);
+
+	err_code = sh1106_init(&m_display);
+	APP_ERROR_CHECK(err_code);
 
 	err_code = nrfx_gpiote_init();
 	APP_ERROR_CHECK(err_code);
