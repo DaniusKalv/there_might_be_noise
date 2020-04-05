@@ -21,8 +21,12 @@ typedef enum
 	CODEC_MODE_I2S
 } codec_mode_t;
 
-ret_code_t codec_init(dk_twi_mngr_t * p_dk_twi_mngr);
+ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr);
 
 ret_code_t codec_set_mode(codec_mode_t mode);
+
+ret_code_t codec_start_audio_stream(void);
+
+void * codec_buffer_pointer_get(size_t size);
 
 #endif // CODEC_H
