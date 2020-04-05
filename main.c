@@ -55,6 +55,7 @@
 #include "splash.h"
 
 #include "codec.h"
+#include "usb.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -681,6 +682,37 @@ static void log_init(void)
 }
 #endif
 
+static void usb_event_handler(usb_event_type_t event, size_t size)
+{
+	if(event == USB_EVENT_TYPE_RX_BUFFER_REQUEST)
+	{
+		void * p_buffer = codec_buffer_pointer_get(size);
+
+		if(p_buffer != NULL)
+		{
+			usb_rx_buffer_reply(p_buffer, 2048);
+		}
+		else
+		{
+			NRF_LOG_ERROR("Could not allocate codec buffer");
+		}
+	}
+	else
+	{
+		static bool m_first_run = true;
+
+		if(m_first_run)
+		{
+			NRF_LOG_INFO("Starting audio stream");
+			ret_code_t err_code = codec_start_audio_stream();
+			APP_ERROR_CHECK(err_code);
+			m_first_run = false;
+		}
+		// TODO:
+	}
+	
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -710,6 +742,7 @@ int main(void)
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_FAULT, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_OTW_CLIP, NRF_GPIO_PIN_NOPULL);
 
+	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
@@ -738,7 +771,10 @@ int main(void)
 	err_code = codec_init(&m_twi_mngr_codec);
 	APP_ERROR_CHECK(err_code);
 
-nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	// err_code = usb_init(usb_event_handler);
+	// APP_ERROR_CHECK(err_code);
+	err_code = codec_start_audio_stream();
+	APP_ERROR_CHECK(err_code);
 
 	power_management_init();
 
@@ -765,11 +801,13 @@ nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 
 	scheduler_init();
 
-	advertising_start(erase_bonds);
+	// advertising_start(erase_bonds);
 
 	// Enter main loop.
 	for (;;)
 	{
+		// while(usb_event_queue_process());
+
 		app_sched_execute();
 		// NRF_LOG_INFO("Fault %u OTW %u", nrf_gpio_pin_read(DK_BSP_TPA3220_FAULT), nrf_gpio_pin_read(DK_BSP_TPA3220_OTW_CLIP));
 		idle_state_handle();

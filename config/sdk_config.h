@@ -2200,7 +2200,7 @@
 // <e> NRFX_POWER_ENABLED - nrfx_power - POWER peripheral driver
 //==========================================================
 #ifndef NRFX_POWER_ENABLED
-#define NRFX_POWER_ENABLED 0
+#define NRFX_POWER_ENABLED 1
 #endif
 // <o> NRFX_POWER_CONFIG_IRQ_PRIORITY  - Interrupt priority
  
@@ -2232,7 +2232,7 @@
 // <i> This settings means only that components for DCDC regulator are installed and it can be enabled.
 
 #ifndef NRFX_POWER_CONFIG_DEFAULT_DCDCENHV
-#define NRFX_POWER_CONFIG_DEFAULT_DCDCENHV 0
+#define NRFX_POWER_CONFIG_DEFAULT_DCDCENHV 1
 #endif
 
 // </e>
@@ -4233,6 +4233,60 @@
 
 // </e>
 
+// <e> NRFX_USBD_ENABLED - nrfx_usbd - USBD peripheral driver
+//==========================================================
+#ifndef NRFX_USBD_ENABLED
+#define NRFX_USBD_ENABLED 1
+#endif
+// <o> NRFX_USBD_CONFIG_IRQ_PRIORITY  - Interrupt priority
+ 
+// <0=> 0 (highest) 
+// <1=> 1 
+// <2=> 2 
+// <3=> 3 
+// <4=> 4 
+// <5=> 5 
+// <6=> 6 
+// <7=> 7 
+
+#ifndef NRFX_USBD_CONFIG_IRQ_PRIORITY
+#define NRFX_USBD_CONFIG_IRQ_PRIORITY 6
+#endif
+
+// <o> NRFX_USBD_CONFIG_DMASCHEDULER_MODE  - USBD DMA scheduler working scheme
+ 
+// <0=> Prioritized access 
+// <1=> Round Robin 
+
+#ifndef NRFX_USBD_CONFIG_DMASCHEDULER_MODE
+#define NRFX_USBD_CONFIG_DMASCHEDULER_MODE 0
+#endif
+
+// <q> NRFX_USBD_CONFIG_DMASCHEDULER_ISO_BOOST  - Give priority to isochronous transfers
+ 
+
+// <i> This option gives priority to isochronous transfers.
+// <i> Enabling it assures that isochronous transfers are always processed,
+// <i> even if multiple other transfers are pending.
+// <i> Isochronous endpoints are prioritized before the usbd_dma_scheduler_algorithm
+// <i> function is called, so the option is independent of the algorithm chosen.
+
+#ifndef NRFX_USBD_CONFIG_DMASCHEDULER_ISO_BOOST
+#define NRFX_USBD_CONFIG_DMASCHEDULER_ISO_BOOST 1
+#endif
+
+// <q> NRFX_USBD_CONFIG_ISO_IN_ZLP  - Respond to an IN token on ISO IN endpoint with ZLP when no data is ready
+ 
+
+// <i> If set, ISO IN endpoint will respond to an IN token with ZLP when no data is ready to be sent.
+// <i> Else, there will be no response.
+
+#ifndef NRFX_USBD_CONFIG_ISO_IN_ZLP
+#define NRFX_USBD_CONFIG_ISO_IN_ZLP 0
+#endif
+
+// </e>
+
 // <e> NRFX_WDT_ENABLED - nrfx_wdt - WDT peripheral driver
 //==========================================================
 #ifndef NRFX_WDT_ENABLED
@@ -4415,7 +4469,7 @@
 // <e> POWER_ENABLED - nrf_drv_power - POWER peripheral driver - legacy layer
 //==========================================================
 #ifndef POWER_ENABLED
-#define POWER_ENABLED 0
+#define POWER_ENABLED 1
 #endif
 // <o> POWER_CONFIG_IRQ_PRIORITY  - Interrupt priority
  
@@ -4449,10 +4503,17 @@
 // <i> This settings means only that components for DCDC regulator are installed and it can be enabled.
 
 #ifndef POWER_CONFIG_DEFAULT_DCDCENHV
-#define POWER_CONFIG_DEFAULT_DCDCENHV 0
+#define POWER_CONFIG_DEFAULT_DCDCENHV 1
 #endif
 
 // </e>
+
+// <q> SYSTICK_ENABLED  - nrf_drv_systick - ARM(R) SysTick driver - legacy layer
+ 
+
+#ifndef SYSTICK_ENABLED
+#define SYSTICK_ENABLED 1
+#endif
 
 // <q> PPI_ENABLED  - nrf_drv_ppi - PPI peripheral driver - legacy layer
  
@@ -5098,7 +5159,7 @@
 // <e> USBD_ENABLED - nrf_drv_usbd - USB driver
 //==========================================================
 #ifndef USBD_ENABLED
-#define USBD_ENABLED 0
+#define USBD_ENABLED 1
 #endif
 // <o> USBD_CONFIG_IRQ_PRIORITY  - Interrupt priority
  
@@ -5397,13 +5458,13 @@
  
 
 #ifndef APP_USBD_AUDIO_ENABLED
-#define APP_USBD_AUDIO_ENABLED 0
+#define APP_USBD_AUDIO_ENABLED 1
 #endif
 
 // <e> APP_USBD_ENABLED - app_usbd - USB Device library
 //==========================================================
 #ifndef APP_USBD_ENABLED
-#define APP_USBD_ENABLED 0
+#define APP_USBD_ENABLED 1
 #endif
 // <o> APP_USBD_VID - Vendor ID.  <0x0000-0xFFFF> 
 
@@ -5412,7 +5473,7 @@
 // <i> Vendor ID ordered from USB IF: http://www.usb.org/developers/vendor/
 
 #ifndef APP_USBD_VID
-#define APP_USBD_VID 0
+#define APP_USBD_VID 0x1915
 #endif
 
 // <o> APP_USBD_PID - Product ID.  <0x0000-0xFFFF> 
@@ -5422,7 +5483,7 @@
 // <i> Selected Product ID
 
 #ifndef APP_USBD_PID
-#define APP_USBD_PID 0
+#define APP_USBD_PID 0x520E
 #endif
 
 // <o> APP_USBD_DEVICE_VER_MAJOR - Device version, major part.  <0-99> 
@@ -5443,6 +5504,15 @@
 #define APP_USBD_DEVICE_VER_MINOR 0
 #endif
 
+// <o> APP_USBD_DEVICE_VER_SUB - Sub-minor device version  <0-9> 
+
+
+// <i> Sub-minor device version, will be converted automatically to BCD notation. Use just decimal values.
+
+#ifndef APP_USBD_DEVICE_VER_SUB
+#define APP_USBD_DEVICE_VER_SUB 0
+#endif
+
 // <q> APP_USBD_CONFIG_SELF_POWERED  - Self-powered device, as opposed to bus-powered.
  
 
@@ -5454,7 +5524,7 @@
 
 
 #ifndef APP_USBD_CONFIG_MAX_POWER
-#define APP_USBD_CONFIG_MAX_POWER 500
+#define APP_USBD_CONFIG_MAX_POWER 100
 #endif
 
 // <q> APP_USBD_CONFIG_POWER_EVENTS_PROCESS  - Process power events.
@@ -5497,7 +5567,7 @@
 // <2=> Interrupt 
 
 #ifndef APP_USBD_CONFIG_SOF_HANDLING_MODE
-#define APP_USBD_CONFIG_SOF_HANDLING_MODE 1
+#define APP_USBD_CONFIG_SOF_HANDLING_MODE 2
 #endif
 
 // </e>
@@ -5567,7 +5637,7 @@
 // <i> Setting string to NULL disables that string.
 // <i> The order of manufacturer names must be the same like in @ref APP_USBD_STRINGS_LANGIDS.
 #ifndef APP_USBD_STRINGS_MANUFACTURER
-#define APP_USBD_STRINGS_MANUFACTURER APP_USBD_STRING_DESC("Nordic Semiconductor")
+#define APP_USBD_STRINGS_MANUFACTURER APP_USBD_STRING_DESC("Danius Kalvaitis")
 #endif
 
 // </e>
@@ -5591,7 +5661,7 @@
 // <i> Note: This value is not editable in Configuration Wizard.
 // <i> List of product names that is defined the same way like in @ref APP_USBD_STRINGS_MANUFACTURER.
 #ifndef APP_USBD_STRINGS_PRODUCT
-#define APP_USBD_STRINGS_PRODUCT APP_USBD_STRING_DESC("nRF52 USB Product")
+#define APP_USBD_STRINGS_PRODUCT APP_USBD_STRING_DESC("There Might Be Noise")
 #endif
 
 // </e>
@@ -5860,7 +5930,7 @@
  
 
 #ifndef HARDFAULT_HANDLER_ENABLED
-#define HARDFAULT_HANDLER_ENABLED 0
+#define HARDFAULT_HANDLER_ENABLED 1
 #endif
 
 // <e> HCI_MEM_POOL_ENABLED - hci_mem_pool - memory pool implementation used by HCI

@@ -58,6 +58,7 @@ $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_release.out: \
 # Source files common to all targets
 SRC_FILES += \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/app/usb/usb.c \
   $(PROJ_DIR)/app/codec/codec.c \
   $(LIB_ROOT)/nordic/components/uicr/dk_uicr.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
@@ -79,6 +80,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
   $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
   $(SDK_ROOT)/components/libraries/timer/app_timer.c \
+  $(SDK_ROOT)/components/libraries/usbd/app_usbd.c \
+  $(SDK_ROOT)/components/libraries/usbd/class/audio/app_usbd_audio.c \
+  $(SDK_ROOT)/components/libraries/usbd/app_usbd_core.c \
+  $(SDK_ROOT)/components/libraries/usbd/app_usbd_string_desc.c \
   $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
   $(SDK_ROOT)/components/libraries/crc16/crc16.c \
   $(SDK_ROOT)/components/libraries/fds/fds.c \
@@ -101,16 +106,21 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_power.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_timer.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_usbd.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_i2s.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_systick.c \
+  $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
@@ -146,6 +156,7 @@ SRC_FILES += \
 # Include folders common to all targets
 INC_FOLDERS += \
   $(PROJ_DIR) \
+  $(PROJ_DIR)/app/usb \
   $(PROJ_DIR)/app/codec \
   $(PROJ_DIR)/config \
   $(PROJ_DIR)/ui \
@@ -163,6 +174,7 @@ INC_FOLDERS += \
   $(LIB_ROOT)/nordic/components/util \
   $(LIB_ROOT)/nordic/modules/dk_twi_mngr \
   $(SDK_ROOT)/components/softdevice/s140/headers/nrf52 \
+  $(SDK_ROOT)/components/softdevice/s140/headers \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/modules/nrfx/mdk \
@@ -219,6 +231,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/nfc/t4t_parser/apdu \
   $(SDK_ROOT)/components/libraries/util \
   $(SDK_ROOT)/components/libraries/csense \
+  $(SDK_ROOT)/components/libraries/usbd \
+  $(SDK_ROOT)/components/libraries/usbd/class/audio \
   $(SDK_ROOT)/components/libraries/balloc \
   $(SDK_ROOT)/components/libraries/ecc \
   $(SDK_ROOT)/components/libraries/hardfault \
@@ -226,6 +240,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/hci \
   $(SDK_ROOT)/components/libraries/timer \
   $(SDK_ROOT)/integration/nrfx \
+  $(SDK_ROOT)/integration/nrfx/legacy \
   $(SDK_ROOT)/components/nfc/t4t_parser/tlv \
   $(SDK_ROOT)/components/libraries/sortlist \
   $(SDK_ROOT)/components/libraries/stack_guard \
@@ -267,6 +282,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_services/ble_hrs \
   $(SDK_ROOT)/components/libraries/bootloader \
   $(SDK_ROOT)/components/libraries/bootloader/dfu \
+  $(SDK_ROOT)/external/utf_converter \
 
 # Libraries common to all targets
 LIB_FILES += \

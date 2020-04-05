@@ -23,7 +23,12 @@
 			"app_usbd_audio.h": "c",
 			"app_usbd_audio_desc.h": "c",
 			"app_usbd_descriptor.h": "c",
-			"tlv320aic3106-internal.h": "c"
+			"tlv320aic3106-internal.h": "c",
+			"app_usbd.h": "c",
+			"nrf_drv_usbd.h": "c",
+			"nrfx_clock.h": "c",
+			"sdk_common.h": "c",
+			"nrf_sdh_soc.h": "c"
 		}
 	}
 }
