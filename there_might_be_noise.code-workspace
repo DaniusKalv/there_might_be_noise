@@ -32,7 +32,9 @@
 			"nrf_queue.h": "c",
 			"codec.h": "c",
 			"nrf_balloc.h": "c",
-			"usb.h": "c"
+			"usb.h": "c",
+			"sdk_errors.h": "c",
+			"app_util.h": "c"
 		}
 	}
 }

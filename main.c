@@ -738,7 +738,7 @@ static void usb_event_handler(usb_event_type_t event, size_t size)
 						NRF_LOG_INFO("BUI %u", m_buffer_index);
 					}
 					m_buffer_index -= I2S_AUDIO_BUFFER_SIZE;
-					memcpy(p_new_buffer, &p_current_buffer[I2S_AUDIO_BUFFER_SIZE], m_buffer_index);
+					memcpy(p_new_buffer, &p_current_buffer[I2S_AUDIO_BUFFER_SIZE], m_buffer_index); // TODO ????????? check somehow
 					err_code = nrf_queue_push(&m_codec_queue, (uint32_t *)&p_current_buffer);
 
 					if(err_code != NRF_SUCCESS)
@@ -816,19 +816,20 @@ static void codec_event_handler(codec_event_type_t event_type, uint32_t * p_rele
 
 			if(err_code == NRF_SUCCESS)
 			{
-				err_code = codec_set_next_buffer((uint32_t *)p_buffer);
-				APP_ERROR_CHECK(err_code);
+				// err_code = codec_set_next_buffer((uint32_t *)p_buffer);
+				// APP_ERROR_CHECK(err_code);
 			}
 			else
 			{
 				NRF_LOG_INFO("FIFO empty");
-				codec_stop_audio_stream();
+				// codec_stop_audio_stream();
 
 				while(nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer) == NRF_SUCCESS)
 				{
 					nrf_balloc_free(&m_codec_pool, p_buffer);
 				}
 
+				NRF_LOG_INFO("Pool util %u Queue util %u", nrf_balloc_max_utilization_get(&m_codec_pool), nrf_queue_max_utilization_get(&m_codec_queue));
 				nrf_queue_reset(&m_codec_queue);
 
 				m_codec_running = false;
@@ -910,6 +911,10 @@ int main(void)
 
 	NRF_LOG_FLUSH();
 	ble_stack_init();
+
+	err_code = sd_clock_hfclk_request();
+	APP_ERROR_CHECK(err_code);
+
 	sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
 	peer_manager_init();
 

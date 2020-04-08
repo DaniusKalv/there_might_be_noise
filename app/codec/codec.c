@@ -25,17 +25,17 @@ TLV320AIC3106_DEF(m_tlv320aic3106, NULL, DK_BSP_TLV320_I2C_ADDRESS);
 // #define I2S_DATA_BLOCK_WORDS    512
 // static uint32_t m_buffer_tx[2][I2S_DATA_BLOCK_WORDS] = { 0 };
 
-// static int16_t m_test_data[2][32] =
-// {
-// {-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
-//   -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
-//      -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
-//      -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384},
-// {-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
-//   -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
-//      -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
-//      -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384}
-// };
+static int16_t m_test_data[2][32] =
+{
+{-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
+  -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
+     -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
+     -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384},
+{-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
+  -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
+     -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
+     -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384}
+};
 
 // static uint8_t m_active_buffer = 0;
 // static uint16_t m_buffer_index[2] = { 0 };
@@ -86,6 +86,20 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 	// No data has been transferred yet at this point, so there is nothing to
 	// check. Only the buffers for the next part of the transfer should be
 	// provided.
+	if(p_released->p_tx_buffer == NULL)
+	{
+		nrfx_i2s_buffers_t next_buffers =
+		{
+			.p_tx_buffer = m_test_data[1],
+			.p_rx_buffer = NULL
+		};
+
+		nrfx_i2s_next_buffers_set(&next_buffers);
+	}
+	else
+	{
+		nrfx_i2s_next_buffers_set(p_released);
+	}
 
 	if(m_event_handler != NULL)
 	{
@@ -169,19 +183,59 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	tlv320aic3106_pll_prog_reg_a_t pll_prog_reg_a;
 	memset(&pll_prog_reg_a, 0, sizeof(pll_prog_reg_a));
 
-	pll_prog_reg_a.pll_q = TLV320AIC3106_PLL_Q_2;
+	pll_prog_reg_a.pll_enabled = true;
+	pll_prog_reg_a.pll_p       = TLV320AIC3106_PLL_P_1;
 
 	err_code = tlv320aic3106_set_pll_prog_reg_a(&m_tlv320aic3106, &pll_prog_reg_a);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	tlv320aic3106_pll_prog_reg_b_t pll_prog_reg_b;
+	memset(&pll_prog_reg_b, 0, sizeof(pll_prog_reg_b));
+
+	pll_prog_reg_b.pll_j = 5; // TODO: Create a define
+
+	err_code = tlv320aic3106_set_pll_prog_reg_b(&m_tlv320aic3106, &pll_prog_reg_b);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	err_code = tlv320aic3106_set_pll_d(&m_tlv320aic3106, 6448); // TODO: define
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	err_code = tlv320aic3106_set_pll_r(&m_tlv320aic3106, 1); // TODO: define
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
 	tlv320aic3106_datapath_setup_t datapath_setup;
 	memset(&datapath_setup, 0, sizeof(datapath_setup));
 
+	datapath_setup.fsref_setting           = TLV320AIC3106_FSREF_SETTING_44_1KHZ;
 	datapath_setup.left_dac_datapath_ctrl  = TLV320AIC3106_LEFT_DAC_DATAPATH_CTRL_LEFT_EN;
 	datapath_setup.right_dac_datapath_ctrl = TLV320AIC3106_RIGHT_DAC_DATAPATH_CTRL_RIGHT_EN;
 
 	err_code = tlv320aic3106_set_datapath(&m_tlv320aic3106, &datapath_setup);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	tlv320aic3106_audio_ser_data_interface_ctrl_a_t audio_ser_di_ctrl_a;
+	memset(&audio_ser_di_ctrl_a, 0, sizeof(audio_ser_di_ctrl_a));
+
+	audio_ser_di_ctrl_a.bclk_dir_output = true;
+	audio_ser_di_ctrl_a.wclk_dir_output = true;
+
+	err_code = tlv320aic3106_set_audio_ser_data_interface_ctrl_a(&m_tlv320aic3106, &audio_ser_di_ctrl_a);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	tlv320aic3106_audio_ser_data_interface_ctrl_b_t audio_ser_di_ctrl_b;
+	memset(&audio_ser_di_ctrl_b, 0, sizeof(audio_ser_di_ctrl_b));
+
+	audio_ser_di_ctrl_b.bclk_256_mode          = true;
+	audio_ser_di_ctrl_b.re_sync_dac            = true;
+	audio_ser_di_ctrl_b.re_sync_with_soft_mute = true;
+
+	err_code = tlv320aic3106_set_audio_ser_data_interface_ctrl_b(&m_tlv320aic3106, &audio_ser_di_ctrl_b);
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
@@ -232,19 +286,19 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	tlv320aic3106_gpio_ctrl_b_t gpio_ctrl_b;
 	memset(&gpio_ctrl_b, 0, sizeof(gpio_ctrl_b));
 
-	gpio_ctrl_b.codec_clkin_src = TLV320AIC3106_CODEC_CLKIN_SRC_CLKDIV_OUT;
+	gpio_ctrl_b.codec_clkin_src = TLV320AIC3106_CODEC_CLKIN_SRC_PLLDIV_OUT;
 
 	err_code = tlv320aic3106_set_gpio_ctrl_b(&m_tlv320aic3106, &gpio_ctrl_b);
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
-	tlv320aic3106_clk_gen_ctrl_t clk_gen_ctrl;
-	memset(&clk_gen_ctrl, 0, sizeof(clk_gen_ctrl));
+	// tlv320aic3106_clk_gen_ctrl_t clk_gen_ctrl;
+	// memset(&clk_gen_ctrl, 0, sizeof(clk_gen_ctrl));
 
-	clk_gen_ctrl.clkdiv_in_src = TLV320AIC3106_CLK_IN_SRC_BCLK;
+	// clk_gen_ctrl.pllclk_in_src = TLV320AIC3106_CLK_IN_SRC_MCLK;
 
-	err_code = tlv320aic3106_set_clk_gen_ctrl(&m_tlv320aic3106, &clk_gen_ctrl);
-	VERIFY_SUCCESS(err_code);
+	// err_code = tlv320aic3106_set_clk_gen_ctrl(&m_tlv320aic3106, &clk_gen_ctrl);
+	// VERIFY_SUCCESS(err_code);
 /*----------------------------------------------------------------------------*/
 
 	// while(true)
@@ -295,11 +349,11 @@ ret_code_t codec_start_audio_stream(uint32_t * p_tx_buffer)
 	NRF_LOG_INFO("Starting audio stream");
 
 	nrfx_i2s_buffers_t initial_buffers = {
-		.p_tx_buffer = p_tx_buffer,
+		.p_tx_buffer = m_test_data[0],
 		.p_rx_buffer = NULL
 	};
 
-	return nrfx_i2s_start(&initial_buffers, I2S_ADIO_BUFFER_SIZE_WORDS, 0);
+	return nrfx_i2s_start(&initial_buffers, 16, 0);
 }
 
 ret_code_t codec_stop_audio_stream(void)
