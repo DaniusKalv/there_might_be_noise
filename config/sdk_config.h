@@ -1816,7 +1816,7 @@
 // <1=> Slave 
 
 #ifndef NRFX_I2S_CONFIG_MASTER
-#define NRFX_I2S_CONFIG_MASTER 0
+#define NRFX_I2S_CONFIG_MASTER 1
 #endif
 
 // <o> NRFX_I2S_CONFIG_FORMAT  - Format
@@ -1880,7 +1880,7 @@
 // <34340864=> 32MHz/125 
 
 #ifndef NRFX_I2S_CONFIG_MCK_SETUP
-#define NRFX_I2S_CONFIG_MCK_SETUP 1342177280
+#define NRFX_I2S_CONFIG_MCK_SETUP 2147483648
 #endif
 
 // <o> NRFX_I2S_CONFIG_RATIO  - MCK/LRCK ratio
@@ -1896,7 +1896,7 @@
 // <8=> 512x 
 
 #ifndef NRFX_I2S_CONFIG_RATIO
-#define NRFX_I2S_CONFIG_RATIO 6
+#define NRFX_I2S_CONFIG_RATIO 2
 #endif
 
 // <o> NRFX_I2S_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -6211,7 +6211,7 @@
 // <e> NRF_BALLOC_CONFIG_DEBUG_ENABLED - Enables debug mode in the module.
 //==========================================================
 #ifndef NRF_BALLOC_CONFIG_DEBUG_ENABLED
-#define NRF_BALLOC_CONFIG_DEBUG_ENABLED 0
+#define NRF_BALLOC_CONFIG_DEBUG_ENABLED 1
 #endif
 // <o> NRF_BALLOC_CONFIG_HEAD_GUARD_WORDS - Number of words used as head guard.  <0-255> 
 
@@ -6231,7 +6231,7 @@
  
 
 #ifndef NRF_BALLOC_CONFIG_BASIC_CHECKS_ENABLED
-#define NRF_BALLOC_CONFIG_BASIC_CHECKS_ENABLED 0
+#define NRF_BALLOC_CONFIG_BASIC_CHECKS_ENABLED 1
 #endif
 
 // <q> NRF_BALLOC_CONFIG_DOUBLE_FREE_CHECK_ENABLED  - Enables double memory free check in this module.
@@ -8617,7 +8617,7 @@
 // <e> NRF_BALLOC_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRF_BALLOC_CONFIG_LOG_ENABLED
-#define NRF_BALLOC_CONFIG_LOG_ENABLED 0
+#define NRF_BALLOC_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRF_BALLOC_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -9179,7 +9179,7 @@
 // <e> NRF_QUEUE_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRF_QUEUE_CONFIG_LOG_ENABLED
-#define NRF_QUEUE_CONFIG_LOG_ENABLED 0
+#define NRF_QUEUE_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRF_QUEUE_CONFIG_LOG_LEVEL  - Default Severity level
  

@@ -309,8 +309,7 @@ ret_code_t usb_init(usb_event_handler_t evt_handler)
 
 	m_usb_event_handler = evt_handler;
 
-	ret = nrf_drv_clock_init();
-	VERIFY_SUCCESS(ret);
+	nrf_drv_clock_init();
 
 	ret = app_usbd_init(&usbd_config);
 	VERIFY_SUCCESS(ret);

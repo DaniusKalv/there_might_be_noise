@@ -28,7 +28,11 @@
 			"nrf_drv_usbd.h": "c",
 			"nrfx_clock.h": "c",
 			"sdk_common.h": "c",
-			"nrf_sdh_soc.h": "c"
+			"nrf_sdh_soc.h": "c",
+			"nrf_queue.h": "c",
+			"codec.h": "c",
+			"nrf_balloc.h": "c",
+			"usb.h": "c"
 		}
 	}
 }

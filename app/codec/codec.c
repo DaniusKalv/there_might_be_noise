@@ -22,8 +22,8 @@ NRF_LOG_MODULE_REGISTER();
 
 TLV320AIC3106_DEF(m_tlv320aic3106, NULL, DK_BSP_TLV320_I2C_ADDRESS);
 
-#define I2S_DATA_BLOCK_WORDS    512
-static uint32_t m_buffer_tx[2][I2S_DATA_BLOCK_WORDS] = { 0 };
+// #define I2S_DATA_BLOCK_WORDS    512
+// static uint32_t m_buffer_tx[2][I2S_DATA_BLOCK_WORDS] = { 0 };
 
 // static int16_t m_test_data[2][32] =
 // {
@@ -37,8 +37,9 @@ static uint32_t m_buffer_tx[2][I2S_DATA_BLOCK_WORDS] = { 0 };
 //      -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384}
 // };
 
-static uint8_t m_active_buffer = 0;
-static uint16_t m_buffer_index[2] = { 0 };
+// static uint8_t m_active_buffer = 0;
+// static uint16_t m_buffer_index[2] = { 0 };
+static codec_event_handler_t m_event_handler = NULL;
 
 #define BUFFER_SIZE sizeof(m_buffer_tx[0])
 
@@ -48,14 +49,14 @@ static uint16_t m_buffer_index[2] = { 0 };
 // Number of blocks of data to be contained in each transfer.
 #define BLOCKS_TO_TRANSFER  20
 
-static uint8_t volatile m_blocks_transferred     = 0;
-static uint8_t          m_zero_samples_to_ignore = 0;
-static uint16_t         m_sample_value_to_send;
-static uint16_t         m_sample_value_expected;
-static bool             m_error_encountered;
+// static uint8_t volatile m_blocks_transferred     = 0;
+// static uint8_t          m_zero_samples_to_ignore = 0;
+// static uint16_t         m_sample_value_to_send;
+// static uint16_t         m_sample_value_expected;
+// static bool             m_error_encountered;
 
-static uint32_t       * volatile mp_block_to_fill  = NULL;
-static uint32_t const * volatile mp_block_to_check = NULL;
+// static uint32_t       * volatile mp_block_to_fill  = NULL;
+// static uint32_t const * volatile mp_block_to_check = NULL;
 
 static void codec_pins_init(void)
 {
@@ -85,34 +86,40 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 	// No data has been transferred yet at this point, so there is nothing to
 	// check. Only the buffers for the next part of the transfer should be
 	// provided.
-	if (!p_released->p_tx_buffer)
-	{
-		m_active_buffer = 0;
-		nrfx_i2s_buffers_t const next_buffers = {
-			.p_rx_buffer = NULL,
-			.p_tx_buffer = m_buffer_tx[1],
-		};
-		APP_ERROR_CHECK(nrfx_i2s_next_buffers_set(&next_buffers));
-	}
-	else
-	{
-		m_active_buffer = !m_active_buffer;
 
-		nrfx_i2s_buffers_t next_buffers = {
-			.p_rx_buffer = NULL,
-			.p_tx_buffer = m_buffer_tx[m_active_buffer]
-		};
+	if(m_event_handler != NULL)
+	{
+		m_event_handler(CODEC_EVENT_TYPE_BUFFER_REQUEST, p_released->p_tx_buffer);
+	}
+
+	// if (!p_released->p_tx_buffer)
+	// {
+	// 	m_active_buffer = 0;
+	// 	nrfx_i2s_buffers_t const next_buffers = {
+	// 		.p_rx_buffer = NULL,
+	// 		.p_tx_buffer = m_buffer_tx[1],
+	// 	};
+	// 	APP_ERROR_CHECK(nrfx_i2s_next_buffers_set(&next_buffers));
+	// }
+	// else
+	// {
+	// 	m_active_buffer = !m_active_buffer;
+
+	// 	nrfx_i2s_buffers_t next_buffers = {
+	// 		.p_rx_buffer = NULL,
+	// 		.p_tx_buffer = m_buffer_tx[m_active_buffer]
+	// 	};
 
 		// The driver has just finished accessing the buffers pointed by
 		// 'p_released'. They can be used for the next part of the transfer
 		// that will be scheduled now.
-		APP_ERROR_CHECK(nrfx_i2s_next_buffers_set(&next_buffers));
+		// APP_ERROR_CHECK(nrfx_i2s_next_buffers_set(&next_buffers));
 
 		// The pointer needs to be typecasted here, so that it is possible to
 		// modify the content it is pointing to (it is marked in the structure
 		// as pointing to constant data because the driver is not supposed to
 		// modify the provided data).
-	}
+	// }
 }
 
 static ret_code_t i2s_init(void)
@@ -128,12 +135,15 @@ static ret_code_t i2s_init(void)
 	return nrfx_i2s_init(&config, i2s_data_handler);
 }
 
-ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr)
+ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t event_handler)
 {
 	ret_code_t err_code;
+
 	VERIFY_PARAM_NOT_NULL(p_dk_twi_mngr);
+	VERIFY_PARAM_NOT_NULL(event_handler);
 
 	m_tlv320aic3106.p_dk_twi_mngr_instance = p_dk_twi_mngr;
+	m_event_handler = event_handler;
 
 	codec_pins_init();
 
@@ -272,22 +282,40 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr)
 // 	return NRF_SUCCESS;
 // }
 
-void * codec_buffer_pointer_get(size_t size)
-{
-	uint8_t buffer_index = !m_active_buffer;
-	void * p_buff = (void *)m_buffer_tx[buffer_index];
+// void * codec_buffer_pointer_get(size_t size)
+// {
+// 	uint8_t buffer_index = !m_active_buffer;
+// 	void * p_buff = (void *)m_buffer_tx[buffer_index];
 
-	return p_buff;
-}
+// 	return p_buff;
+// }
 
-ret_code_t codec_start_audio_stream(void)
+ret_code_t codec_start_audio_stream(uint32_t * p_tx_buffer)
 {
-	nrfx_i2s_buffers_t const initial_buffers = {
-		.p_tx_buffer = m_test_data[0],
+	NRF_LOG_INFO("Starting audio stream");
+
+	nrfx_i2s_buffers_t initial_buffers = {
+		.p_tx_buffer = p_tx_buffer,
 		.p_rx_buffer = NULL
 	};
 
-	m_active_buffer = 0;
+	return nrfx_i2s_start(&initial_buffers, I2S_ADIO_BUFFER_SIZE_WORDS, 0);
+}
 
-	return nrfx_i2s_start(&initial_buffers, 16, 0);
+ret_code_t codec_stop_audio_stream(void)
+{
+	NRF_LOG_INFO("Stopping audio stream");
+	nrfx_i2s_stop();
+	return NRF_SUCCESS;
+}
+
+ret_code_t codec_set_next_buffer(uint32_t * p_tx_buffer)
+{
+	nrfx_i2s_buffers_t next_buffers =
+	{
+		.p_tx_buffer = p_tx_buffer,
+		.p_rx_buffer = NULL
+	};
+
+	return nrfx_i2s_next_buffers_set(&next_buffers);
 }
