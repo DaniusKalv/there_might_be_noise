@@ -30,4 +30,6 @@ void usb_rx_buffer_reply(void * p_buff, size_t size);
 
 bool usb_event_queue_process(void);
 
+void usb_stop(void);
+
 #endif // USB_H

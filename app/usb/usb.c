@@ -214,7 +214,7 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 			ret_code_t ret;
 			if(m_usb_event_handler != NULL)
 			{
-				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, 0);
+				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, m_temp_buffer_size);
 			}
 			/* Block from headphones copied into buffer, send it into microphone input */
 			// ret = app_usbd_audio_class_tx_start(&m_app_audio_microphone.base, m_temp_buffer, m_temp_buffer_size); TODO:
@@ -237,7 +237,7 @@ static void spkr_sof_ev_handler(uint16_t framecnt)
 		return;
 	}
 	size_t rx_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
-	// m_temp_buffer_size = rx_size;
+	m_temp_buffer_size = rx_size;
 	if (rx_size > 0)
 	{
 		ASSERT(rx_size <= sizeof(m_temp_buffer));
@@ -340,4 +340,10 @@ void usb_rx_buffer_reply(void * p_buff, size_t size)
 bool usb_event_queue_process(void)
 {
 	return app_usbd_event_queue_process();
+}
+
+void usb_stop(void)
+{
+	// app_usbd_stop();
+	app_usbd_disable();
 }

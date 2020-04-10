@@ -25,17 +25,18 @@ TLV320AIC3106_DEF(m_tlv320aic3106, NULL, DK_BSP_TLV320_I2C_ADDRESS);
 // #define I2S_DATA_BLOCK_WORDS    512
 // static uint32_t m_buffer_tx[2][I2S_DATA_BLOCK_WORDS] = { 0 };
 
-static int16_t m_test_data[2][32] =
-{
-{-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
-  -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
-     -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
-     -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384},
-{-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
-  -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
-     -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
-     -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384}
-};
+
+// static int16_t m_test_data[2][32] =
+// {
+// {-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
+//   -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
+//      -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
+//      -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384},
+// {-16384, -13086, -9923,  -7024,  -4509,  -2480,  -1020,  -189, 
+//   -21,    -523,   -1674,  -3428,  -5712,  -8433,  -11479, -14726, 
+//      -18042, -21289, -24335, -27056, -29340, -31094, -32245, -32747, 
+//      -32579, -31748, -30288, -28259, -25744, -22845, -19682, -16384}
+// };
 
 // static uint8_t m_active_buffer = 0;
 // static uint16_t m_buffer_index[2] = { 0 };
@@ -86,20 +87,20 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 	// No data has been transferred yet at this point, so there is nothing to
 	// check. Only the buffers for the next part of the transfer should be
 	// provided.
-	if(p_released->p_tx_buffer == NULL)
-	{
-		nrfx_i2s_buffers_t next_buffers =
-		{
-			.p_tx_buffer = m_test_data[1],
-			.p_rx_buffer = NULL
-		};
+	// if(p_released->p_tx_buffer == NULL)
+	// {
+	// 	const nrfx_i2s_buffers_t next_buffers =
+	// 	{
+	// 		.p_tx_buffer = m_tx_buffer[1],
+	// 		.p_rx_buffer = NULL
+	// 	};
 
-		nrfx_i2s_next_buffers_set(&next_buffers);
-	}
-	else
-	{
-		nrfx_i2s_next_buffers_set(p_released);
-	}
+	// 	nrfx_i2s_next_buffers_set(&next_buffers);
+	// }
+	// else
+	// {
+	// 	nrfx_i2s_next_buffers_set(p_released);
+	// }
 
 	if(m_event_handler != NULL)
 	{
@@ -231,9 +232,9 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	tlv320aic3106_audio_ser_data_interface_ctrl_b_t audio_ser_di_ctrl_b;
 	memset(&audio_ser_di_ctrl_b, 0, sizeof(audio_ser_di_ctrl_b));
 
-	audio_ser_di_ctrl_b.bclk_256_mode          = true;
-	audio_ser_di_ctrl_b.re_sync_dac            = true;
-	audio_ser_di_ctrl_b.re_sync_with_soft_mute = true;
+	audio_ser_di_ctrl_b.bclk_256_mode          = false;
+	audio_ser_di_ctrl_b.re_sync_dac            = false;
+	audio_ser_di_ctrl_b.re_sync_with_soft_mute = false;
 
 	err_code = tlv320aic3106_set_audio_ser_data_interface_ctrl_b(&m_tlv320aic3106, &audio_ser_di_ctrl_b);
 	VERIFY_SUCCESS(err_code);
@@ -344,16 +345,17 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 // 	return p_buff;
 // }
 
-ret_code_t codec_start_audio_stream(uint32_t * p_tx_buffer)
+ret_code_t codec_start_audio_stream(uint32_t const * p_tx_buffer)
 {
 	NRF_LOG_INFO("Starting audio stream");
 
-	nrfx_i2s_buffers_t initial_buffers = {
-		.p_tx_buffer = m_test_data[0],
+	nrfx_i2s_buffers_t initial_buffers =
+	{
+		.p_tx_buffer = p_tx_buffer,
 		.p_rx_buffer = NULL
 	};
 
-	return nrfx_i2s_start(&initial_buffers, 16, 0);
+	return nrfx_i2s_start(&initial_buffers, I2S_AUDIO_BUFFER_SIZE_WORDS, 0);
 }
 
 ret_code_t codec_stop_audio_stream(void)
@@ -363,7 +365,7 @@ ret_code_t codec_stop_audio_stream(void)
 	return NRF_SUCCESS;
 }
 
-ret_code_t codec_set_next_buffer(uint32_t * p_tx_buffer)
+ret_code_t codec_set_next_buffer(uint32_t const * p_tx_buffer)
 {
 	nrfx_i2s_buffers_t next_buffers =
 	{
