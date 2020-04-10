@@ -832,10 +832,10 @@ static void codec_event_handler(codec_event_type_t event_type, uint32_t * p_rele
 			ret_code_t err_code;
 			uint32_t * p_buffer;
 
-			if(p_released_buffer != NULL)
-			{
-				nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer);
-			}
+			// if(p_released_buffer != NULL)
+			// {
+			nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer);
+			// }
 
 			err_code = nrf_queue_peek(&m_codec_queue, (uint32_t **)&p_buffer);
 
@@ -899,9 +899,9 @@ int main(void)
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_FAULT, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(DK_BSP_TPA3220_OTW_CLIP, NRF_GPIO_PIN_NOPULL);
 
-	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 
-	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// while(true)
 	// {

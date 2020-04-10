@@ -14,7 +14,7 @@
 
 #include "dk_twi_mngr.h"
 
-#define I2S_AUDIO_BUFFER_SIZE_WORDS 384
+#define I2S_AUDIO_BUFFER_SIZE_WORDS 1024
 #define I2S_AUDIO_BUFFER_SIZE       I2S_AUDIO_BUFFER_SIZE_WORDS * sizeof(uint32_t)
 
 typedef enum
