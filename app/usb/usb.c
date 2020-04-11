@@ -23,10 +23,7 @@
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
-/**
- * @brief USB audio samples size
- */
-#define BUFFER_SIZE  (48)
+#define USB_RX_PACKET_SIZE 192
 
 /**
  * @brief Enable power USB detection
@@ -59,9 +56,9 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
  *      channel 0
  *      channel 1
  */
-#define SPKR_FEATURE_CONTROLS()                                             \
-        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE),  \
-        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE),  \
+#define SPKR_FEATURE_CONTROLS()                                                                                         \
+        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE), \
+        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE), \
         APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE)
 
 /**
@@ -126,15 +123,11 @@ APP_USBD_AUDIO_GLOBAL_DEF(m_app_audio_speakers,
                           &m_spkr_fea_desc,
                           0,
                           APP_USBD_AUDIO_AS_IFACE_FORMAT_PCM,
-                          192,
+                          USB_RX_PACKET_SIZE,
                           APP_USBD_AUDIO_SUBCLASS_AUDIOSTREAMING,
                           1
                          );
 
-/**
- * @brief Internal audio temporary buffer
- */
-static int16_t m_temp_buffer[2 * BUFFER_SIZE];
 
 /**
  * @brief The size of last received block from
@@ -172,6 +165,7 @@ static void spkr_audio_user_class_req(app_usbd_class_inst_t const * p_inst)
 			{
 				//Only mute control is defined
 				p_req->payload[0] = m_mute_spkr;
+				NRF_LOG_INFO("Mute spkr 1 0x%x", m_mute_spkr);
 			}
 			break;
 		case APP_USBD_AUDIO_CLASS_REQ_OUT:
@@ -180,6 +174,7 @@ static void spkr_audio_user_class_req(app_usbd_class_inst_t const * p_inst)
 			{
 				//Only mute control is defined
 				m_mute_spkr = p_req->payload[0];
+				NRF_LOG_INFO("Mute spkr 2 0x%x", m_mute_spkr);
 			}
 			break;
 		case APP_USBD_AUDIO_EP_REQ_IN:
@@ -216,14 +211,7 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 			{
 				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, m_temp_buffer_size);
 			}
-			/* Block from headphones copied into buffer, send it into microphone input */
-			// ret = app_usbd_audio_class_tx_start(&m_app_audio_microphone.base, m_temp_buffer, m_temp_buffer_size); TODO:
-			if (NRF_SUCCESS == ret)
-			{
-				// bsp_board_led_invert(LED_AUDIO_RX);
-			}
-			break;
-		}
+		} break;
 		default:
 			break;
 	}
@@ -236,15 +224,15 @@ static void spkr_sof_ev_handler(uint16_t framecnt)
 	{
 		return;
 	}
-	size_t rx_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
-	m_temp_buffer_size = rx_size;
-	if (rx_size > 0)
+	m_temp_buffer_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
+
+	if (m_temp_buffer_size > 0)
 	{
-		ASSERT(rx_size <= sizeof(m_temp_buffer));
+		ASSERT(m_temp_buffer_size <= USB_RX_PACKET_SIZE);
 
 		if(m_usb_event_handler != NULL)
 		{
-			m_usb_event_handler(USB_EVENT_TYPE_RX_BUFFER_REQUEST, rx_size);
+			m_usb_event_handler(USB_EVENT_TYPE_RX_BUFFER_REQUEST, m_temp_buffer_size);
 		}
 		else
 		{

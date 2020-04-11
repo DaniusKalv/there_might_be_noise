@@ -207,6 +207,9 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	err_code = tlv320aic3106_set_pll_r(&m_tlv320aic3106, 1); // TODO: define
 	VERIFY_SUCCESS(err_code);
 
+//12
+//21 - 26
+//47 - 52
 /*----------------------------------------------------------------------------*/
 	tlv320aic3106_datapath_setup_t datapath_setup;
 	memset(&datapath_setup, 0, sizeof(datapath_setup));
@@ -233,8 +236,8 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	memset(&audio_ser_di_ctrl_b, 0, sizeof(audio_ser_di_ctrl_b));
 
 	audio_ser_di_ctrl_b.bclk_256_mode          = false;
-	audio_ser_di_ctrl_b.re_sync_dac            = false;
-	audio_ser_di_ctrl_b.re_sync_with_soft_mute = false;
+	audio_ser_di_ctrl_b.re_sync_dac            = true;
+	audio_ser_di_ctrl_b.re_sync_with_soft_mute = true;
 
 	err_code = tlv320aic3106_set_audio_ser_data_interface_ctrl_b(&m_tlv320aic3106, &audio_ser_di_ctrl_b);
 	VERIFY_SUCCESS(err_code);

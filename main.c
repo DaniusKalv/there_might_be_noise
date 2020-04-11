@@ -823,7 +823,7 @@ static void usb_event_handler(usb_event_type_t event, size_t size)
 		}
 }
 
-static void codec_event_handler(codec_event_type_t event_type, uint32_t * p_released_buffer)
+static void codec_event_handler(codec_event_type_t event_type, uint32_t const * p_released_buffer)
 {
 	switch(event_type)
 	{
@@ -832,17 +832,15 @@ static void codec_event_handler(codec_event_type_t event_type, uint32_t * p_rele
 			ret_code_t err_code;
 			uint32_t * p_buffer;
 
-			// if(p_released_buffer != NULL)
-			// {
-			nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer);
-			// }
+			err_code = nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer);
+			UNUSED_RETURN_VALUE(err_code);
 
 			err_code = nrf_queue_peek(&m_codec_queue, (uint32_t **)&p_buffer);
 
 			if(err_code == NRF_SUCCESS)
 			{
-			err_code = codec_set_next_buffer(p_buffer);
-			APP_ERROR_CHECK(err_code);
+				err_code = codec_set_next_buffer(p_buffer);
+				APP_ERROR_CHECK(err_code);
 			}
 			else
 			{
@@ -862,7 +860,7 @@ static void codec_event_handler(codec_event_type_t event_type, uint32_t * p_rele
 
 			if(p_released_buffer != NULL)
 			{
-				nrf_balloc_free(&m_codec_pool, p_released_buffer);
+				nrf_balloc_free(&m_codec_pool, (void *)p_released_buffer);
 			}
 		} break;
 		default:
@@ -901,7 +899,7 @@ int main(void)
 
 	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 
-	nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
+	// nrf_gpio_pin_set(DK_BSP_TPA3220_RST);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// while(true)
 	// {
@@ -971,7 +969,10 @@ int main(void)
 	// Enter main loop.
 	for (;;)
 	{
-		while(usb_event_queue_process());
+		while(usb_event_queue_process())
+		{
+			NRF_LOG_PROCESS();
+		}
 
 		// app_sched_execute();
 		idle_state_handle();

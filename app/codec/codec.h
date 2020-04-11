@@ -29,7 +29,7 @@ typedef enum
 	CODEC_EVENT_TYPE_BUFFER_REQUEST
 } codec_event_type_t;
 
-typedef void (* codec_event_handler_t)(codec_event_type_t event_type, uint32_t * p_released_buffer);
+typedef void (* codec_event_handler_t)(codec_event_type_t event_type, uint32_t const * p_released_buffer);
 
 ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t event_handler);
 
