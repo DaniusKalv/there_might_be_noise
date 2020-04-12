@@ -79,11 +79,6 @@ SH1106_DEF(m_display, &m_spi, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, 1
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
-static void scheduler_init(void)
-{
-	APP_SCHED_INIT(SCHED_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-}
-
 /**@brief Function for putting the chip into sleep mode.
  *
  * @note This function will not return.
@@ -603,16 +598,6 @@ void peer_manager_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
-
-/**@brief Function for initializing power management.
- */
-void power_management_init(void)
-{
-	ret_code_t err_code;
-	err_code = nrf_pwr_mgmt_init();
-	APP_ERROR_CHECK(err_code);
-}
-
 /**@brief Function for handling the idle state (main loop).
  *
  * @details If there is no pending log operation, then sleep until next the next event occurs.
@@ -640,18 +625,6 @@ void idle_state_handle(void)
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
 	app_error_handler(DEAD_BEEF, line_num, p_file_name);
-}
-
-/**@brief Function for the Timer initialization.
- *
- * @details Initializes the timer module. This creates and starts application timers.
- */
-static void timers_init(void)
-{
-	// Initialize timer module.
-	ret_code_t err_code;
-	err_code = app_timer_init();
-	APP_ERROR_CHECK(err_code);
 }
 
 ret_code_t twi_mngr_init(dk_twi_mngr_t const * p_dk_twi_mngr,
@@ -696,6 +669,11 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			{
 				usb_rx_buffer_reply(p_buffer, size);
 			}
+			else
+			{
+				NRF_LOG_ERROR("Could not allocate audio rx buffer");
+			}
+			
 		} break;
 		case USB_EVENT_TYPE_RX_DONE:
 			err_code = codec_release_rx_buffer(size);
@@ -739,8 +717,6 @@ int main(void)
 	NRF_LOG_DEBUG("Log initialised.");
 	NRF_LOG_PROCESS();
 
-	timers_init();
-
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
 	// nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
@@ -782,18 +758,23 @@ int main(void)
 	err_code = usb_init(usb_event_handler);
 	APP_ERROR_CHECK(err_code);
 
-	// err_code = codec_start_audio_stream();
-	// APP_ERROR_CHECK(err_code);
+	err_code = app_timer_init();
+	APP_ERROR_CHECK(err_code);
 
-	power_management_init();
+	APP_SCHED_INIT(SCHED_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
+
+	err_code = nrf_pwr_mgmt_init();
+	APP_ERROR_CHECK(err_code);
 
 	NRF_LOG_FLUSH();
+
 	ble_stack_init();
 
 	err_code = sd_clock_hfclk_request();
 	APP_ERROR_CHECK(err_code);
 
 	sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
+
 	peer_manager_init();
 
 	err_code = dk_ble_gap_init();
@@ -812,8 +793,6 @@ int main(void)
 	nrf_delay_ms(100);
 #endif
 
-	scheduler_init();
-
 	// advertising_start(erase_bonds);
 
 	// Enter main loop.
@@ -824,7 +803,7 @@ int main(void)
 			NRF_LOG_PROCESS();
 		}
 
-		// app_sched_execute();
+		app_sched_execute();
 		idle_state_handle();
 	}
 }

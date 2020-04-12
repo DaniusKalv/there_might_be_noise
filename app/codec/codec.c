@@ -37,7 +37,8 @@ static void codec_pins_init(void)
 static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
                              uint32_t                   status)
 {
-	VERIFY_PARAM_NOT_NULL(p_released);
+	VERIFY_PARAM_NOT_NULL_VOID(p_released);
+	ret_code_t err_code;
 
 	if (!(status & NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED))
 	{
@@ -50,7 +51,7 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 		return;
 	}
 
-	if(p_released == NULL)
+	if(p_released->p_tx_buffer == NULL)
 	{
 		if(m_event_handler != NULL)
 		{
@@ -68,6 +69,9 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 			.p_tx_buffer = p_buffer,
 			.p_rx_buffer = NULL
 		};
+
+		err_code = nrfx_i2s_next_buffers_set(&next_buffers);
+		VERIFY_SUCCESS_VOID(err_code);
 	}
 	else
 	{
@@ -107,7 +111,11 @@ static void codec_buffer_event_handler(codec_buffer_event_type_t event_type)
 			{
 				NRF_LOG_INFO("Codec buffer watermark crossed.");
 				err_code = codec_start_audio_stream();
-				ASSERT(err_code == NRF_SUCCESS);
+
+				if(err_code != NRF_SUCCESS)
+				{
+					NRF_LOG_ERROR("Could not start audio stream");
+				}
 			}
 			break;
 		default:

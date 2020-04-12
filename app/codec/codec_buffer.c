@@ -22,7 +22,7 @@ NRF_LOG_MODULE_REGISTER();
 #define CODEC_POOL_SIZE             32
 #define CODEC_POOL_ELEMENT_SIZE     CODEC_BUFFER_SIZE + 192
 #define CODEC_QUEUE_SIZE            CODEC_POOL_SIZE
-#define CODEC_QUEUE_WATERMARK_LOW   3
+#define CODEC_QUEUE_WATERMARK_LOW   4
 
 #define CODEC_POPPED_QUEUE_SIZE     2
 
@@ -79,7 +79,7 @@ void * codec_buffer_get_rx(size_t size)
 		}
 	}
 
-	if(m_codec_buffer.write_index >= CODEC_POOL_ELEMENT_SIZE)
+	if(m_codec_buffer.write_index >= CODEC_BUFFER_SIZE)
 	{
 		NRF_LOG_ERROR("Codec buffer pool element write index overflow %u", m_codec_buffer.write_index);
 		return NULL;
@@ -96,11 +96,11 @@ ret_code_t codec_buffer_release_rx(size_t size)
 
 	m_codec_buffer.size += size;
 
-	if(m_codec_buffer.size >= CODEC_POOL_ELEMENT_SIZE) // We filled the buffer! Time to copy its overflow to the next block and push buffer pointer to FIFO
+	if(m_codec_buffer.size >= CODEC_BUFFER_SIZE) // We filled the buffer! Time to copy its overflow to the next block and push buffer pointer to FIFO
 	{
 		size_t copy_size, queue_utilization;
 
-		codec_buffer_t m_previous_buffer = m_codec_buffer;
+		codec_buffer_t previous_buffer = m_codec_buffer;
 		codec_buffer_alloc(&m_codec_buffer);
 
 		if(m_codec_buffer.p_buffer == NULL)
@@ -108,12 +108,12 @@ ret_code_t codec_buffer_release_rx(size_t size)
 			return NRF_ERROR_NO_MEM;
 		}
 
-		copy_size = m_previous_buffer.size - CODEC_POOL_ELEMENT_SIZE;
-		memcpy(m_codec_buffer.p_buffer, &m_previous_buffer.p_buffer[CODEC_POOL_ELEMENT_SIZE], copy_size);
+		copy_size = previous_buffer.size - CODEC_BUFFER_SIZE;
+		memcpy(m_codec_buffer.p_buffer, &previous_buffer.p_buffer[CODEC_BUFFER_SIZE], copy_size);
 		m_codec_buffer.write_index = copy_size;
 		m_codec_buffer.size = copy_size;
 
-		err_code = nrf_queue_push(&m_codec_queue, (uint32_t *)&m_previous_buffer.p_buffer);
+		err_code = nrf_queue_push(&m_codec_queue, (uint32_t **)&previous_buffer.p_buffer);
 		VERIFY_SUCCESS(err_code);
 
 		queue_utilization = nrf_queue_utilization_get(&m_codec_queue);
@@ -145,7 +145,8 @@ uint32_t * codec_buffer_get_tx(void)
 		return NULL;
 	}
 
-	if(nrf_queue_utilization_get(&m_poped_buffer_queue) >= CODEC_POPPED_QUEUE_SIZE)
+	size_t size = nrf_queue_utilization_get(&m_poped_buffer_queue);
+	if(size >= CODEC_POPPED_QUEUE_SIZE)
 	{
 		uint32_t * p_released_buffer;
 		err_code = nrf_queue_pop(&m_poped_buffer_queue, (uint32_t **)&p_released_buffer);
@@ -153,11 +154,16 @@ uint32_t * codec_buffer_get_tx(void)
 		if(err_code == NRF_SUCCESS)
 		{
 			nrf_balloc_free(&m_codec_pool, (void *)p_released_buffer);
+			NRF_LOG_INFO("Pool util %u", nrf_balloc_max_utilization_get(&m_codec_pool));
 		}
 	}
 
-	err_code = nrf_queue_push(&m_poped_buffer_queue, p_buffer);
-	ASSERT(err_code == NRF_SUCCESS);
+	err_code = nrf_queue_push(&m_poped_buffer_queue, (uint32_t **)&p_buffer);
+
+	if(err_code != NRF_SUCCESS)
+	{
+		NRF_LOG_ERROR("Internal error");
+	}
 
 	return p_buffer;
 }

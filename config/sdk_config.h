@@ -6211,7 +6211,7 @@
 // <e> NRF_BALLOC_CONFIG_DEBUG_ENABLED - Enables debug mode in the module.
 //==========================================================
 #ifndef NRF_BALLOC_CONFIG_DEBUG_ENABLED
-#define NRF_BALLOC_CONFIG_DEBUG_ENABLED 0
+#define NRF_BALLOC_CONFIG_DEBUG_ENABLED 1
 #endif
 // <o> NRF_BALLOC_CONFIG_HEAD_GUARD_WORDS - Number of words used as head guard.  <0-255> 
 
@@ -6238,7 +6238,7 @@
  
 
 #ifndef NRF_BALLOC_CONFIG_DOUBLE_FREE_CHECK_ENABLED
-#define NRF_BALLOC_CONFIG_DOUBLE_FREE_CHECK_ENABLED 0
+#define NRF_BALLOC_CONFIG_DOUBLE_FREE_CHECK_ENABLED 1
 #endif
 
 // <q> NRF_BALLOC_CONFIG_DATA_TRASHING_CHECK_ENABLED  - Enables free memory corruption check in this module.
@@ -6506,7 +6506,7 @@
  
 
 #ifndef NRF_PWR_MGMT_CONFIG_USE_SCHEDULER
-#define NRF_PWR_MGMT_CONFIG_USE_SCHEDULER 0
+#define NRF_PWR_MGMT_CONFIG_USE_SCHEDULER 1
 #endif
 
 // <o> NRF_PWR_MGMT_CONFIG_HANDLER_PRIORITY_COUNT - The number of priorities for module handlers. 
@@ -9128,7 +9128,7 @@
 // <e> NRF_PWR_MGMT_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRF_PWR_MGMT_CONFIG_LOG_ENABLED
-#define NRF_PWR_MGMT_CONFIG_LOG_ENABLED 0
+#define NRF_PWR_MGMT_CONFIG_LOG_ENABLED 1
 #endif
 // <o> NRF_PWR_MGMT_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -9155,7 +9155,7 @@
 // <8=> White 
 
 #ifndef NRF_PWR_MGMT_CONFIG_INFO_COLOR
-#define NRF_PWR_MGMT_CONFIG_INFO_COLOR 0
+#define NRF_PWR_MGMT_CONFIG_INFO_COLOR 3
 #endif
 
 // <o> NRF_PWR_MGMT_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
