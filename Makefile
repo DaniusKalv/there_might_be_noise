@@ -60,6 +60,7 @@ SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/app/usb/usb.c \
   $(PROJ_DIR)/app/codec/codec.c \
+  $(PROJ_DIR)/app/codec/codec_buffer.c \
   $(LIB_ROOT)/nordic/components/uicr/dk_uicr.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_gap/dk_ble_gap.c \

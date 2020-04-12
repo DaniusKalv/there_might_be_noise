@@ -14,9 +14,6 @@
 
 #include "dk_twi_mngr.h"
 
-#define I2S_AUDIO_BUFFER_SIZE_WORDS 256
-#define I2S_AUDIO_BUFFER_SIZE       I2S_AUDIO_BUFFER_SIZE_WORDS * sizeof(uint32_t)
-
 typedef enum
 {
 	CODEC_MODE_OFF,
@@ -26,21 +23,18 @@ typedef enum
 
 typedef enum
 {
-	CODEC_EVENT_TYPE_BUFFER_REQUEST
+	CODEC_EVENT_TYPE_AUDIO_STREAM_STARTED,
+	CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED
 } codec_event_type_t;
 
-typedef void (* codec_event_handler_t)(codec_event_type_t event_type, uint32_t const * p_released_buffer);
+typedef void (* codec_event_handler_t)(codec_event_type_t event_type);
 
 ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t event_handler);
 
 ret_code_t codec_set_mode(codec_mode_t mode);
 
-ret_code_t codec_start_audio_stream(uint32_t const * p_tx_buffer);
+void * codec_get_rx_buffer(size_t size);
 
-ret_code_t codec_stop_audio_stream(void);
-
-// void * codec_buffer_pointer_get(size_t size);
-
-ret_code_t codec_set_next_buffer(uint32_t const * p_tx_buffer);
+ret_code_t codec_release_rx_buffer(size_t size);
 
 #endif // CODEC_H

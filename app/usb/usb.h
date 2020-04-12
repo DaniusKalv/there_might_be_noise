@@ -22,7 +22,7 @@ typedef enum
 	USB_EVENT_TYPE_RX_DONE
 } usb_event_type_t;
 
-typedef void (* usb_event_handler_t)(usb_event_type_t event, size_t size);
+typedef void (* usb_event_handler_t)(usb_event_type_t event_type, size_t size);
 
 ret_code_t usb_init(usb_event_handler_t evt_handler);
 

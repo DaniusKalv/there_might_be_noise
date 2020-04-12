@@ -56,8 +56,6 @@
 
 #include "codec.h"
 #include "usb.h"
-#include "nrf_queue.h"
-#include "nrf_balloc.h"
 
 #define DEAD_BEEF 0xDEADBEEF /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -70,16 +68,6 @@
 
 #define TWI_MNGR_QUEUE_SIZE     16
 
-#define I2S_AUDIO_POOL_SIZE             32
-#define I2S_AUDIO_POOL_ELEMENT_SIZE     I2S_AUDIO_BUFFER_SIZE + 192
-#define I2S_AUDIO_QUEUE_SIZE            I2S_AUDIO_POOL_SIZE
-#define I2S_AUDIO_QUEUE_WATERMARK_LOW   I2S_AUDIO_QUEUE_SIZE / 4
-
-typedef uint32_t * i2s_audio_buffer_pointer_t;
-
-NRF_BALLOC_DEF(m_codec_pool, I2S_AUDIO_POOL_ELEMENT_SIZE, I2S_AUDIO_POOL_SIZE);
-NRF_QUEUE_DEF(i2s_audio_buffer_pointer_t, m_codec_queue, I2S_AUDIO_POOL_SIZE, NRF_QUEUE_MODE_NO_OVERFLOW);
-
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
@@ -90,8 +78,6 @@ static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SP
 SH1106_DEF(m_display, &m_spi, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, 128, 64);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
-
-static volatile bool m_codec_running = false;
 
 static void scheduler_init(void)
 {
@@ -696,173 +682,40 @@ static void log_init(void)
 }
 #endif
 
-static void usb_event_handler(usb_event_type_t event, size_t size)
+static void usb_event_handler(usb_event_type_t event_type, size_t size)
 {
 	ret_code_t err_code;
-	static uint8_t * p_previous_buffer = NULL;
-	static uint8_t * p_current_buffer = NULL;
 
-	if(event == USB_EVENT_TYPE_RX_BUFFER_REQUEST)
+	switch (event_type)
 	{
-		static uint16_t m_buffer_index = 0;
-
-		if(m_buffer_index == 0) // If buffer empty, allocate a new element from the pool
+		case USB_EVENT_TYPE_RX_BUFFER_REQUEST:
 		{
-			p_previous_buffer = p_current_buffer;
-			p_current_buffer = nrf_balloc_alloc(&m_codec_pool);
+			void * p_buffer = codec_get_rx_buffer(size);
 
-			if(p_current_buffer != NULL)
+			if(p_buffer != NULL)
 			{
-				usb_rx_buffer_reply(p_current_buffer, size);
-				m_buffer_index += size;
+				usb_rx_buffer_reply(p_buffer, size);
 			}
-			else
-			{
-				NRF_LOG_ERROR("Could not allocate codec buffer1");
-			}
-		}
-		else
-		{
-			if(m_buffer_index < I2S_AUDIO_BUFFER_SIZE)
-			{
-				usb_rx_buffer_reply(&p_current_buffer[m_buffer_index], size);   // TODO: Add size check
-				m_buffer_index += size;
-			}
-			else
-			{
-				if(p_current_buffer != NULL)
-				{
-					if(m_buffer_index >= I2S_AUDIO_POOL_ELEMENT_SIZE)
-					{
-						NRF_LOG_ERROR("BUI %u", m_buffer_index);
-					}
-
-					m_buffer_index = m_buffer_index - I2S_AUDIO_BUFFER_SIZE;
-
-					// NRF_LOG_INFO("rep 0x%x", p_current_buffer);
-					usb_rx_buffer_reply(&p_current_buffer[m_buffer_index], size);
-					m_buffer_index += size;
-				}
-				else
-				{
-					NRF_LOG_ERROR("Could not allocate codec buffer2 %u %u", nrf_queue_max_utilization_get(&m_codec_queue), nrf_balloc_max_utilization_get(&m_codec_pool));
-				}
-			}
-		}
+		} break;
+		case USB_EVENT_TYPE_RX_DONE:
+			err_code = codec_release_rx_buffer(size);
+			APP_ERROR_CHECK(err_code);
+			break;
+		default:
+			break;
 	}
-	else if(event == USB_EVENT_TYPE_RX_DONE)
-	{
-		static uint16_t m_rx_size = 0;
-		m_rx_size += size;
-
-		if(m_rx_size >= I2S_AUDIO_BUFFER_SIZE) // We filled the buffer! Time to copy its overflow to the next block and push buffer pointer to FIFO
-		{
-			static size_t m_last_queue_utilization = 0;
-			m_rx_size -= I2S_AUDIO_BUFFER_SIZE;
-
-			p_previous_buffer = p_current_buffer;
-			p_current_buffer = nrf_balloc_alloc(&m_codec_pool);
-			// NRF_LOG_INFO("0x%x", p_current_buffer);
-
-			if(p_current_buffer != NULL)
-			{
-				// to new buffer     from last bit of previous          size over buffer size
-				// NRF_LOG_INFO("0x%x, 0x%x", p_current_buffer, p_previous_buffer);
-				// NRF_LOG_INFO("Rx size %u", m_rx_size);
-				memcpy(p_current_buffer, &p_previous_buffer[I2S_AUDIO_BUFFER_SIZE], m_rx_size); // TODO ????????? check somehow
-				//          push previous buffer
-				// NRF_LOG_INFO("Push 0x%x", p_previous_buffer);
-				err_code = nrf_queue_push(&m_codec_queue, (uint32_t *)&p_previous_buffer);
-		
-					if(err_code != NRF_SUCCESS)
-					{
-						NRF_LOG_ERROR("Queue full Do something!"); // TODO
-					}
-
-					size_t queue_utilization = nrf_queue_utilization_get(&m_codec_queue);
-					 
-					if(queue_utilization > 8 &&
-					   !m_codec_running) // Maybe I2S transfer should be started, we just crossed the watermark
-					{
-					// usb_stop();
-
-					// int16_t * p_buffer;
-					// uint8_t buff_i = 0;
-
-					// while(nrf_queue_pop(&m_codec_queue, ((int16_t **)&p_buffer)) == NRF_SUCCESS)
-					// {
-					// 	NRF_LOG_INFO("Buffer index %u", buff_i);
-					// 	buff_i++;
-
-					// 	for(uint16_t i = 0; i < I2S_AUDIO_BUFFER_SIZE_WORDS*2; i+=2)
-					// 	{
-					// 		NRF_LOG_RAW_INFO("%i, %i\r\n", p_buffer[i], p_buffer[i+1]);
-					// 		while(NRF_LOG_PROCESS());
-					// 	}
-					// }
-						uint32_t * p_buffer;
-						err_code = nrf_queue_peek(&m_codec_queue, (uint32_t **)&p_buffer);
-						if(err_code == NRF_SUCCESS)
-						{
-							codec_start_audio_stream(p_buffer);
-						}
-						else
-						{
-						NRF_LOG_WARNING("Could not peek queue");
-						}
-						m_codec_running = true;
-					}
-					// NRF_LOG_INFO("Queue util %u", queue_utilization);
-					m_last_queue_utilization = queue_utilization;
-				}
-				else
-				{
-					NRF_LOG_ERROR("Could not allocate codec buffer2 %u %u", nrf_queue_max_utilization_get(&m_codec_queue), nrf_balloc_max_utilization_get(&m_codec_pool));
-				}
-			}
-		}
 }
 
-static void codec_event_handler(codec_event_type_t event_type, uint32_t const * p_released_buffer)
+static void codec_event_handler(codec_event_type_t event_type)
 {
 	switch(event_type)
 	{
-		case CODEC_EVENT_TYPE_BUFFER_REQUEST:
-		{
-			ret_code_t err_code;
-			uint32_t * p_buffer;
-
-			err_code = nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer);
-			UNUSED_RETURN_VALUE(err_code);
-
-			err_code = nrf_queue_peek(&m_codec_queue, (uint32_t **)&p_buffer);
-
-			if(err_code == NRF_SUCCESS)
-			{
-				err_code = codec_set_next_buffer(p_buffer);
-				APP_ERROR_CHECK(err_code);
-			}
-			else
-			{
-				NRF_LOG_INFO("FIFO empty");
-				codec_stop_audio_stream();
-
-				while(nrf_queue_pop(&m_codec_queue, (uint32_t **)&p_buffer) == NRF_SUCCESS)
-				{
-					nrf_balloc_free(&m_codec_pool, p_buffer);
-				}
-
-				NRF_LOG_INFO("Pool util %u Queue util %u", nrf_balloc_max_utilization_get(&m_codec_pool), nrf_queue_max_utilization_get(&m_codec_queue));
-				nrf_queue_reset(&m_codec_queue);
-
-				m_codec_running = false;
-			}
-
-			if(p_released_buffer != NULL)
-			{
-				nrf_balloc_free(&m_codec_pool, (void *)p_released_buffer);
-			}
-		} break;
+		case CODEC_EVENT_TYPE_AUDIO_STREAM_STARTED:
+			NRF_LOG_INFO("Codec audio stream started");
+			break;
+		case CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED:
+			NRF_LOG_INFO("Codec audio stream stopped");
+			break;
 		default:
 			break;
 	}
@@ -921,9 +774,6 @@ int main(void)
 	APP_ERROR_CHECK(err_code);
 
 	err_code = twi_mngr_init(&m_twi_mngr_codec, DK_BSP_I2C_SCL0, DK_BSP_I2C_SDA0);
-	APP_ERROR_CHECK(err_code);
-
-	err_code = nrf_balloc_init(&m_codec_pool);
 	APP_ERROR_CHECK(err_code);
 
 	err_code = codec_init(&m_twi_mngr_codec, codec_event_handler);
