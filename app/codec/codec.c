@@ -40,14 +40,18 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 	VERIFY_PARAM_NOT_NULL_VOID(p_released);
 	ret_code_t err_code;
 
-	if (!(status & NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED))
+	if (!(status & NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED)) // This will get called two times. For each buffer release.
 	{
-		if(m_event_handler != NULL)
+		if(m_streaming_audio == false)
 		{
-			m_streaming_audio = false;
-			m_event_handler(CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED);
+			if(m_event_handler != NULL)
+			{
+				m_event_handler(CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED);
+			}
 			codec_buffer_reset();
 		}
+
+		m_streaming_audio = false;
 		return;
 	}
 
@@ -197,9 +201,10 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	err_code = tlv320aic3106_set_pll_r(&m_tlv320aic3106, 1); // TODO: define
 	VERIFY_SUCCESS(err_code);
 
-//12
 //21 - 26
 //47 - 52
+
+//12
 /*----------------------------------------------------------------------------*/
 	tlv320aic3106_datapath_setup_t datapath_setup;
 	memset(&datapath_setup, 0, sizeof(datapath_setup));
@@ -349,4 +354,9 @@ void * codec_get_rx_buffer(size_t size)
 ret_code_t codec_release_rx_buffer(size_t size)
 {
 	return codec_buffer_release_rx(size);
+}
+
+ret_code_t codec_release_unfinished_rx_buffer(void)
+{
+	return codec_buffer_release_rx_unfinished();
 }

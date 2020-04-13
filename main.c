@@ -679,6 +679,11 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			err_code = codec_release_rx_buffer(size);
 			APP_ERROR_CHECK(err_code);
 			break;
+		case USB_EVENT_TYPE_RX_TIMEOUT:
+			NRF_LOG_INFO("USB rx timeout");
+			err_code = codec_release_unfinished_rx_buffer();
+			APP_ERROR_CHECK(err_code);
+			break;
 		default:
 			break;
 	}
@@ -716,6 +721,9 @@ int main(void)
 
 	NRF_LOG_DEBUG("Log initialised.");
 	NRF_LOG_PROCESS();
+
+	err_code = app_timer_init();
+	APP_ERROR_CHECK(err_code);
 
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
@@ -756,9 +764,6 @@ int main(void)
 	APP_ERROR_CHECK(err_code);
 
 	err_code = usb_init(usb_event_handler);
-	APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_init();
 	APP_ERROR_CHECK(err_code);
 
 	APP_SCHED_INIT(SCHED_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);

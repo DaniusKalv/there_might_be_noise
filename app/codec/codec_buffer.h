@@ -27,6 +27,8 @@ void * codec_buffer_get_rx(size_t size);
 
 ret_code_t codec_buffer_release_rx(size_t size);
 
+ret_code_t codec_buffer_release_rx_unfinished(void);
+
 uint32_t * codec_buffer_get_tx(void);
 
 /**

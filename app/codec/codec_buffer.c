@@ -133,6 +133,19 @@ ret_code_t codec_buffer_release_rx(size_t size)
 	return NRF_SUCCESS;
 }
 
+ret_code_t codec_buffer_release_rx_unfinished(void)
+{
+	ret_code_t err_code;
+	size_t zero_data_size = CODEC_BUFFER_SIZE - m_codec_buffer.size;
+	memset(&m_codec_buffer.p_buffer[m_codec_buffer.write_index], 0, zero_data_size);
+
+	err_code = nrf_queue_push(&m_codec_queue, (uint32_t **)&m_codec_buffer.p_buffer);
+
+	memset(&m_codec_buffer, 0, sizeof(m_codec_buffer));
+
+	return err_code;
+}
+
 uint32_t * codec_buffer_get_tx(void)
 {
 	ret_code_t err_code;
@@ -154,7 +167,6 @@ uint32_t * codec_buffer_get_tx(void)
 		if(err_code == NRF_SUCCESS)
 		{
 			nrf_balloc_free(&m_codec_pool, (void *)p_released_buffer);
-			NRF_LOG_INFO("Pool util %u", nrf_balloc_max_utilization_get(&m_codec_pool));
 		}
 	}
 

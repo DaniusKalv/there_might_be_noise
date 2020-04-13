@@ -19,7 +19,8 @@
 typedef enum
 {
 	USB_EVENT_TYPE_RX_BUFFER_REQUEST,
-	USB_EVENT_TYPE_RX_DONE
+	USB_EVENT_TYPE_RX_DONE,
+	USB_EVENT_TYPE_RX_TIMEOUT
 } usb_event_type_t;
 
 typedef void (* usb_event_handler_t)(usb_event_type_t event_type, size_t size);

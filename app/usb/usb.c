@@ -19,6 +19,8 @@
 #include "app_usbd_string_desc.h"
 #include "app_usbd_audio.h"
 
+#include "app_timer.h"
+
 #define NRF_LOG_MODULE_NAME usb
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
@@ -129,10 +131,14 @@ APP_USBD_AUDIO_GLOBAL_DEF(m_app_audio_speakers,
                          );
 
 
+APP_TIMER_DEF(m_rx_timeout_timer);
+
+#define USB_RX_TIMEOUT  APP_TIMER_TICKS(3)
+
 /**
  * @brief The size of last received block from
  */
-static size_t m_temp_buffer_size;
+static size_t m_rx_packet_size;
 
 /**
  * @brief Actual speaker mute
@@ -206,10 +212,12 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 			break;
 		case APP_USBD_AUDIO_USER_EVT_RX_DONE:
 		{
-			ret_code_t ret;
+			app_timer_stop(m_rx_timeout_timer); // TODO
+			app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
+
 			if(m_usb_event_handler != NULL)
 			{
-				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, m_temp_buffer_size);
+				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, m_rx_packet_size);
 			}
 		} break;
 		default:
@@ -224,15 +232,15 @@ static void spkr_sof_ev_handler(uint16_t framecnt)
 	{
 		return;
 	}
-	m_temp_buffer_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
+	m_rx_packet_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
 
-	if (m_temp_buffer_size > 0)
+	if (m_rx_packet_size > 0)
 	{
-		ASSERT(m_temp_buffer_size <= USB_RX_PACKET_SIZE);
+		ASSERT(m_rx_packet_size <= USB_RX_PACKET_SIZE);
 
 		if(m_usb_event_handler != NULL)
 		{
-			m_usb_event_handler(USB_EVENT_TYPE_RX_BUFFER_REQUEST, m_temp_buffer_size);
+			m_usb_event_handler(USB_EVENT_TYPE_RX_BUFFER_REQUEST, m_rx_packet_size);
 		}
 		else
 		{
@@ -285,9 +293,18 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 	}
 }
 
+static void usb_rx_timeout_handler(void * p_context)
+{
+	if(m_usb_event_handler != NULL)
+	{
+		m_usb_event_handler(USB_EVENT_TYPE_RX_TIMEOUT, 0);
+	}
+}
+
 ret_code_t usb_init(usb_event_handler_t evt_handler)
 {
 	ret_code_t ret;
+
 	static const app_usbd_config_t usbd_config = {
 		.ev_state_proc = usbd_user_ev_handler,
 		.enable_sof = true
@@ -296,6 +313,9 @@ ret_code_t usb_init(usb_event_handler_t evt_handler)
 	VERIFY_PARAM_NOT_NULL(evt_handler);
 
 	m_usb_event_handler = evt_handler;
+
+	ret = app_timer_create(&m_rx_timeout_timer, APP_TIMER_MODE_SINGLE_SHOT, usb_rx_timeout_handler);
+	VERIFY_SUCCESS(ret);
 
 	nrf_drv_clock_init();
 

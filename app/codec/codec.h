@@ -37,4 +37,6 @@ void * codec_get_rx_buffer(size_t size);
 
 ret_code_t codec_release_rx_buffer(size_t size);
 
+ret_code_t codec_release_unfinished_rx_buffer(void);
+
 #endif // CODEC_H
