@@ -34,7 +34,11 @@
 			"nrf_balloc.h": "c",
 			"usb.h": "c",
 			"sdk_errors.h": "c",
-			"app_util.h": "c"
+			"app_util.h": "c",
+			"array": "c",
+			"string_view": "c",
+			"initializer_list": "c",
+			"utility": "c"
 		}
 	}
 }

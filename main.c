@@ -66,7 +66,7 @@
 #define SCHED_EVENT_DATA_SIZE   32
 #define SCHED_QUEUE_SIZE        16
 
-#define TWI_MNGR_QUEUE_SIZE     16
+#define TWI_MNGR_QUEUE_SIZE     24
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
@@ -672,6 +672,7 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			else
 			{
 				NRF_LOG_ERROR("Could not allocate audio rx buffer");
+				APP_ERROR_CHECK(NRF_ERROR_NO_MEM);
 			}
 			
 		} break;
