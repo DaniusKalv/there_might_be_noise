@@ -393,11 +393,6 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
-
-	// err_code = tlv320aic3106_set_audio_ser_data_interface_ctrl_c(&m_tlv320aic3106, 0);
-	// VERIFY_SUCCESS(err_code);
-
-/*----------------------------------------------------------------------------*/
 	tlv320aic3106_audio_codec_digital_filter_ctrl_t dig_filter_ctrl;
 	memset(&dig_filter_ctrl, 0, sizeof(dig_filter_ctrl));
 
@@ -409,37 +404,6 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	err_code = tlv320aic3106_set_digital_filter_ctrl(&m_tlv320aic3106, &dig_filter_ctrl);
 	VERIFY_SUCCESS(err_code);
 
-//21 - 26
-//47 - 52
-
-//12
-/*----------------------------------------------------------------------------*/
-	// tlv320aic3106_headset_btn_press_detect_b_t headset_btn_press_detect_b;
-	// memset(&headset_btn_press_detect_b, 0, sizeof(headset_btn_press_detect_b));
-
-	// headset_btn_press_detect_b.stereo_out_fully_differential_en = true;
-
-	// err_code = tlv320aic3106_set_headset_btn_press_detect_b(&m_tlv320aic3106, &headset_btn_press_detect_b);
-	// VERIFY_SUCCESS(err_code);
-
-/*----------------------------------------------------------------------------*/
-	// tlv320aic3106_hi_pwr_out_stage_ctrl_t hi_pwr_out_stage_ctrl;
-	// memset(&hi_pwr_out_stage_ctrl, 0, sizeof(hi_pwr_out_stage_ctrl));
-
-	// hi_pwr_out_stage_ctrl.out_common_mode_voltage = TLV320AIC3106_OUT_COMMON_MODE_VOLTAGE_1_65V;
-
-	// err_code = tlv320aic3106_set_hi_pwr_out_stage_ctrl(&m_tlv320aic3106, &hi_pwr_out_stage_ctrl);
-	// VERIFY_SUCCESS(err_code);
-
-/*----------------------------------------------------------------------------*/
-	// tlv320aic3106_out_drv_pop_reduction_t out_drv_pop_reduction;
-	// memset(&out_drv_pop_reduction, 0, sizeof(out_drv_pop_reduction));
-
-	// out_drv_pop_reduction.weak_out_common_mode_voltage = TLV320AIC3106_WEAK_OUT_COMMON_MODE_VOLTAGE_BANDGAP_REF;
-
-	// err_code = tlv320aic3106_set_out_drv_pop_reduction(&m_tlv320aic3106, &out_drv_pop_reduction);
-	// VERIFY_SUCCESS(err_code);
-
 /*----------------------------------------------------------------------------*/
 	tlv320aic3106_datapath_setup_t datapath_setup;
 	memset(&datapath_setup, 0, sizeof(datapath_setup));
@@ -448,6 +412,15 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	datapath_setup.right_dac_datapath_ctrl = TLV320AIC3106_RIGHT_DAC_DATAPATH_CTRL_RIGHT_EN; // TODO:???
 
 	err_code = tlv320aic3106_set_datapath(&m_tlv320aic3106, &datapath_setup);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	tlv320aic3106_dac_quiescent_current_adj_t dac_quiscient_current;
+	memset(&dac_quiscient_current, 0, sizeof(dac_quiscient_current));
+
+	dac_quiscient_current.dac_quiescent_current = TLV320AIC3106_DAC_QUIESCENT_CURRENT_2_DAC_REF;
+
+	err_code = tlv320aic3106_set_dac_quiescient_current(&m_tlv320aic3106, &dac_quiscient_current);
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
@@ -476,10 +449,22 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	tlv320aic3106_dac_out_switch_ctrl_t dac_out_switch_ctrl;
 	memset(&dac_out_switch_ctrl, 0, sizeof(dac_out_switch_ctrl));
 
-	dac_out_switch_ctrl.left_dac_out_switch  = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X3;
-	dac_out_switch_ctrl.right_dac_out_switch = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X3;
+	dac_out_switch_ctrl.left_dac_out_switch  = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X1;
+	dac_out_switch_ctrl.right_dac_out_switch = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X1;
 
 	err_code = tlv320aic3106_set_dac_out_switch_ctrl(&m_tlv320aic3106, &dac_out_switch_ctrl);
+	VERIFY_SUCCESS(err_code);
+
+/*----------------------------------------------------------------------------*/
+	tlv320aic3106_x_to_y_volume_ctrl_t dac_r1_to_right_lop;
+	memset(&dac_r1_to_right_lop, 0, sizeof(dac_r1_to_right_lop));
+
+	dac_r1_to_right_lop.routed_to_y = true;
+
+	err_code = tlv320aic3106_set_dac_r1_to_right_lop(&m_tlv320aic3106, &dac_r1_to_right_lop);
+	VERIFY_SUCCESS(err_code);
+
+	err_code = tlv320aic3106_set_dac_l1_to_left_lop(&m_tlv320aic3106, &dac_r1_to_right_lop);
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
@@ -487,7 +472,7 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	memset(&out_lvl_ctrl, 0, sizeof(out_lvl_ctrl));
 
 	out_lvl_ctrl.not_muted = true;
-	out_lvl_ctrl.powered_up = true;
+	out_lvl_ctrl.power_en  = true;
 
 	err_code = tlv320aic3106_set_left_lop_m_out_lvl_ctrl(&m_tlv320aic3106, &out_lvl_ctrl);
 	VERIFY_SUCCESS(err_code);
@@ -496,46 +481,15 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	VERIFY_SUCCESS(err_code);
 
 /*----------------------------------------------------------------------------*/
-	// tlv320aic3106_x_to_y_volume_ctrl_t dac_r1_to_right_lop;
-	// memset(&dac_r1_to_right_lop, 0, sizeof(dac_r1_to_right_lop));
-
-	// dac_r1_to_right_lop.routed_to_y = true;
-
-	// err_code = tlv320aic3106_set_dac_r1_to_right_lop(&m_tlv320aic3106, &dac_r1_to_right_lop);
-	// VERIFY_SUCCESS(err_code);
-
-	// err_code = tlv320aic3106_set_dac_l1_to_left_lop(&m_tlv320aic3106, &dac_r1_to_right_lop);
-	// VERIFY_SUCCESS(err_code);
-
-/*----------------------------------------------------------------------------*/
 
 #endif // BYPASS
 
 	nrf_delay_ms(1000);
 
-	err_code = app_timer_start(m_codec_debug_timer, CODEC_DEBUG_INTERVAL, NULL);
-	VERIFY_SUCCESS(err_code);
-
-/*----------------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------------*/
-	// tlv320aic3106_clk_gen_ctrl_t clk_gen_ctrl;
-	// memset(&clk_gen_ctrl, 0, sizeof(clk_gen_ctrl));
-
-	// clk_gen_ctrl.pllclk_in_src = TLV320AIC3106_CLK_IN_SRC_MCLK;
-
-	// err_code = tlv320aic3106_set_clk_gen_ctrl(&m_tlv320aic3106, &clk_gen_ctrl);
+	// err_code = app_timer_start(m_codec_debug_timer, CODEC_DEBUG_INTERVAL, NULL);
 	// VERIFY_SUCCESS(err_code);
-/*----------------------------------------------------------------------------*/
 
-	// while(true)
-	// {
-	// 	while(NRF_LOG_PROCESS());
-	// 	__WFE();
-	// 	// Clear the event register.
-	// 	__SEV();
-	// 	__WFE();
-	// }
+/*----------------------------------------------------------------------------*/
 
 	return NRF_SUCCESS;
 	// return codec_set_mode(CODEC_MODE_BYPASS);

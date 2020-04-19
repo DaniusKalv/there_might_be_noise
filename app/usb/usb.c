@@ -213,7 +213,7 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 		case APP_USBD_AUDIO_USER_EVT_RX_DONE:
 		{
 			app_timer_stop(m_rx_timeout_timer); // TODO
-			// app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
+			app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
 
 			if(m_usb_event_handler != NULL)
 			{
@@ -295,6 +295,7 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 
 static void usb_rx_timeout_handler(void * p_context)
 {
+	NRF_LOG_INFO("Timyout");
 	if(m_usb_event_handler != NULL)
 	{
 		m_usb_event_handler(USB_EVENT_TYPE_RX_TIMEOUT, 0);

@@ -8232,7 +8232,7 @@
 // <e> APP_TIMER_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef APP_TIMER_CONFIG_LOG_ENABLED
-#define APP_TIMER_CONFIG_LOG_ENABLED 0
+#define APP_TIMER_CONFIG_LOG_ENABLED 1
 #endif
 // <o> APP_TIMER_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -8243,7 +8243,7 @@
 // <4=> Debug 
 
 #ifndef APP_TIMER_CONFIG_LOG_LEVEL
-#define APP_TIMER_CONFIG_LOG_LEVEL 3
+#define APP_TIMER_CONFIG_LOG_LEVEL 4
 #endif
 
 // <o> APP_TIMER_CONFIG_INITIAL_LOG_LEVEL  - Initial severity level if dynamic filtering is enabled.

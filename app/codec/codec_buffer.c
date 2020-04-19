@@ -19,12 +19,11 @@ NRF_LOG_MODULE_REGISTER();
 
 #define CODEC_BUFFER_SIZE           CODEC_BUFFER_SIZE_WORDS * sizeof(uint32_t)
 
-#define CODEC_POOL_SIZE             32
 #define CODEC_POOL_ELEMENT_SIZE     CODEC_BUFFER_SIZE + 192
-#define CODEC_QUEUE_SIZE            CODEC_POOL_SIZE
-#define CODEC_QUEUE_WATERMARK_LOW   4
-
+#define CODEC_QUEUE_SIZE            14
 #define CODEC_POPPED_QUEUE_SIZE     2
+#define CODEC_POOL_SIZE             CODEC_QUEUE_SIZE + CODEC_POPPED_QUEUE_SIZE
+#define CODEC_QUEUE_WATERMARK_LOW   4
 
 typedef struct
 {
@@ -162,8 +161,13 @@ ret_code_t codec_buffer_release_rx_unfinished(void)
 
 	err_code = nrf_queue_push(&m_codec_queue, (uint32_t **)&m_rxd_buffer.p_buffer);
 
-	memset(&m_rxd_buffer, 0, sizeof(m_rxd_buffer));
+	if(m_wr_buffer.p_buffer != m_rxd_buffer.p_buffer)
+	{
+		nrf_balloc_free(&m_codec_pool, (void *)m_wr_buffer.p_buffer);
+	}
+
 	memset(&m_wr_buffer, 0, sizeof(m_wr_buffer));
+	memset(&m_rxd_buffer, 0, sizeof(m_rxd_buffer));
 
 	return err_code;
 }
@@ -215,6 +219,27 @@ void codec_buffer_reset(void)
 	{
 		nrf_balloc_free(&m_codec_pool, (void *)p_buffer);
 	}
+
+	if(m_wr_buffer.p_buffer == m_rxd_buffer.p_buffer)
+	{
+		if(m_wr_buffer.p_buffer != NULL)
+		{
+			nrf_balloc_free(&m_codec_pool, m_wr_buffer.p_buffer);
+		}
+	}
+	else
+	{
+		if(m_wr_buffer.p_buffer != NULL)
+		{
+			nrf_balloc_free(&m_codec_pool, m_wr_buffer.p_buffer);
+		}
+
+		if(m_rxd_buffer.p_buffer != NULL)
+		{
+			nrf_balloc_free(&m_codec_pool, m_rxd_buffer.p_buffer);
+		}
+	}
+	
 
 	memset(&m_wr_buffer, 0, sizeof(m_wr_buffer));
 	memset(&m_rxd_buffer, 0, sizeof(m_rxd_buffer));

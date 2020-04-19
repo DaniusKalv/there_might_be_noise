@@ -38,7 +38,9 @@
 			"array": "c",
 			"string_view": "c",
 			"initializer_list": "c",
-			"utility": "c"
+			"utility": "c",
+			"app_usbd_audio_internal.h": "c",
+			"app_timer.h": "c"
 		}
 	}
 }

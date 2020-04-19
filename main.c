@@ -806,10 +806,9 @@ int main(void)
 	{
 		while(usb_event_queue_process())
 		{
-			NRF_LOG_PROCESS();
+			app_sched_execute();
 		}
 
-		app_sched_execute();
 		idle_state_handle();
 	}
 }
