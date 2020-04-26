@@ -708,11 +708,6 @@ static void codec_event_handler(codec_event_type_t event_type)
 	}
 }
 
-static void test_callback(void * p_context)
-{
-	NRF_LOG_INFO("Test");
-}
-
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -732,9 +727,6 @@ int main(void)
 	NRF_LOG_PROCESS();
 
 	err_code = app_timer_init();
-	APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_create(&m_test_timer, APP_TIMER_MODE_REPEATED, test_callback);
 	APP_ERROR_CHECK(err_code);
 
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
@@ -776,22 +768,29 @@ int main(void)
 	err_code = codec_init(&m_twi_mngr_codec, codec_event_handler);
 	APP_ERROR_CHECK(err_code);
 
-	// err_code = usb_init(usb_event_handler);
-	// APP_ERROR_CHECK(err_code);
+	err_code = usb_init(usb_event_handler);
+	APP_ERROR_CHECK(err_code);
 
 	APP_SCHED_INIT(SCHED_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
 	err_code = nrf_pwr_mgmt_init();
 	APP_ERROR_CHECK(err_code);
 
+#ifdef DEBUG
 	NRF_LOG_FLUSH();
+	nrf_delay_ms(100);
+#endif
 
 	ble_stack_init();
 
 	// err_code = sd_clock_hfclk_request();
 	// APP_ERROR_CHECK(err_code);
 
-	sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
+	err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
+	APP_ERROR_CHECK(err_code);
+
+	err_code = sd_power_dcdc0_mode_set(NRF_POWER_DCDC_ENABLE);
+	APP_ERROR_CHECK(err_code);
 
 	peer_manager_init();
 
@@ -811,20 +810,19 @@ int main(void)
 	nrf_delay_ms(100);
 #endif
 
-	advertising_start(erase_bonds);
+	// advertising_start(erase_bonds);
 
 	// nrf_delay_ms(5000);
 	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
-	app_timer_start(m_test_timer, APP_TIMER_TICKS(1000), NULL);
 
 	// Enter main loop.
 	for (;;)
 	{
-		// while(usb_event_queue_process())
-		// {
-		// 	app_sched_execute();
-		// 	NRF_LOG_PROCESS();
-		// }
+		while(usb_event_queue_process())
+		{
+			app_sched_execute();
+			NRF_LOG_PROCESS();
+		}
 
 		app_sched_execute();
 

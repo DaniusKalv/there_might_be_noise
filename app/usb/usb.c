@@ -133,7 +133,7 @@ APP_USBD_AUDIO_GLOBAL_DEF(m_app_audio_speakers,
 
 APP_TIMER_DEF(m_rx_timeout_timer);
 
-#define USB_RX_TIMEOUT  APP_TIMER_TICKS(3)
+#define USB_RX_TIMEOUT  APP_TIMER_TICKS(2)
 
 /**
  * @brief The size of last received block from
