@@ -40,7 +40,9 @@
 			"initializer_list": "c",
 			"utility": "c",
 			"app_usbd_audio_internal.h": "c",
-			"app_timer.h": "c"
+			"app_timer.h": "c",
+			"nrf_svci_async_handler.h": "c",
+			"nrf_svci_async_function.h": "c"
 		}
 	}
 }

@@ -5567,7 +5567,7 @@
 // <2=> Interrupt 
 
 #ifndef APP_USBD_CONFIG_SOF_HANDLING_MODE
-#define APP_USBD_CONFIG_SOF_HANDLING_MODE 2
+#define APP_USBD_CONFIG_SOF_HANDLING_MODE 0
 #endif
 
 // </e>
@@ -6543,7 +6543,7 @@
  
 
 #ifndef NRF_SORTLIST_ENABLED
-#define NRF_SORTLIST_ENABLED 0
+#define NRF_SORTLIST_ENABLED 1
 #endif
 
 // <q> NRF_SPI_MNGR_ENABLED  - nrf_spi_mngr - SPI transaction manager
@@ -9139,7 +9139,7 @@
 // <4=> Debug 
 
 #ifndef NRF_PWR_MGMT_CONFIG_LOG_LEVEL
-#define NRF_PWR_MGMT_CONFIG_LOG_LEVEL 3
+#define NRF_PWR_MGMT_CONFIG_LOG_LEVEL 4
 #endif
 
 // <o> NRF_PWR_MGMT_CONFIG_INFO_COLOR  - ANSI escape code prefix.

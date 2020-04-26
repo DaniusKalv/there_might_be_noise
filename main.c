@@ -71,6 +71,9 @@
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
+APP_TIMER_DEF(m_test_timer);
+#define TEST_TIMER_TICKS APP_TIMER_TICKS(100)
+
 DK_TWI_MNGR_DEF(m_twi_mngr_codec, TWI_MNGR_QUEUE_SIZE, DK_BSP_TLV320_I2C_ITERFACE);
 
 static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SPI instance. */
@@ -705,6 +708,11 @@ static void codec_event_handler(codec_event_type_t event_type)
 	}
 }
 
+static void test_callback(void * p_context)
+{
+	NRF_LOG_INFO("Test");
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -726,9 +734,13 @@ int main(void)
 	err_code = app_timer_init();
 	APP_ERROR_CHECK(err_code);
 
+	err_code = app_timer_create(&m_test_timer, APP_TIMER_MODE_REPEATED, test_callback);
+	APP_ERROR_CHECK(err_code);
+
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_RST);
-	// nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
+	nrf_gpio_cfg(DK_BSP_TPA3220_MUTE, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0D1, NRF_GPIO_PIN_NOSENSE);
+	nrf_gpio_pin_clear(DK_BSP_TPA3220_MUTE);
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_HEAD);
 	nrf_gpio_pin_clear(DK_BSP_TPA3220_HEAD);
 
@@ -764,8 +776,8 @@ int main(void)
 	err_code = codec_init(&m_twi_mngr_codec, codec_event_handler);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = usb_init(usb_event_handler);
-	APP_ERROR_CHECK(err_code);
+	// err_code = usb_init(usb_event_handler);
+	// APP_ERROR_CHECK(err_code);
 
 	APP_SCHED_INIT(SCHED_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
@@ -776,8 +788,8 @@ int main(void)
 
 	ble_stack_init();
 
-	err_code = sd_clock_hfclk_request();
-	APP_ERROR_CHECK(err_code);
+	// err_code = sd_clock_hfclk_request();
+	// APP_ERROR_CHECK(err_code);
 
 	sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
 
@@ -799,16 +811,26 @@ int main(void)
 	nrf_delay_ms(100);
 #endif
 
-	// advertising_start(erase_bonds);
+	advertising_start(erase_bonds);
+
+	// nrf_delay_ms(5000);
+	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+	app_timer_start(m_test_timer, APP_TIMER_TICKS(1000), NULL);
 
 	// Enter main loop.
 	for (;;)
 	{
-		while(usb_event_queue_process())
-		{
-			app_sched_execute();
-		}
+		// while(usb_event_queue_process())
+		// {
+		// 	app_sched_execute();
+		// 	NRF_LOG_PROCESS();
+		// }
 
-		idle_state_handle();
+		app_sched_execute();
+
+		if (NRF_LOG_PROCESS() == false)
+		{
+			nrf_pwr_mgmt_run();
+		}
 	}
 }
