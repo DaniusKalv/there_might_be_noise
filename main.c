@@ -658,12 +658,33 @@ static void log_init(void)
 }
 #endif
 
+static void codec_dbg(void * p_event_data, uint16_t event_size)
+{
+	codec_debug();
+}
+
 static void usb_event_handler(usb_event_type_t event_type, size_t size)
 {
 	ret_code_t err_code;
 
 	switch (event_type)
 	{
+		case USB_EVENT_USB_CONNECTED:
+			NRF_LOG_INFO("USB_EVENT_USB_CONNECTED");
+			err_code = codec_set_mode(CODEC_MODE_I2S);
+			APP_ERROR_CHECK(err_code);
+
+			nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+
+			break;
+		case USB_EVENT_USB_REMOVED:
+			NRF_LOG_INFO("USB_EVENT_USB_REMOVED");
+			err_code = codec_set_mode(CODEC_MODE_BYPASS);
+			APP_ERROR_CHECK(err_code);
+
+			// nrf_gpio_pin_clear(DK_BSP_TPA3220_MUTE);
+
+			break;
 		case USB_EVENT_TYPE_RX_BUFFER_REQUEST:
 		{
 			void * p_buffer = codec_get_rx_buffer(size);
@@ -783,8 +804,8 @@ int main(void)
 
 	ble_stack_init();
 
-	// err_code = sd_clock_hfclk_request();
-	// APP_ERROR_CHECK(err_code);
+	err_code = sd_clock_hfclk_request();
+	APP_ERROR_CHECK(err_code);
 
 	err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE); // Enable DC to DC converter right after the softdevice is enabled
 	APP_ERROR_CHECK(err_code);
@@ -811,9 +832,6 @@ int main(void)
 #endif
 
 	// advertising_start(erase_bonds);
-
-	// nrf_delay_ms(5000);
-	// nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 
 	// Enter main loop.
 	for (;;)

@@ -60,6 +60,7 @@ SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/app/usb/usb.c \
   $(PROJ_DIR)/app/codec/codec.c \
+  $(PROJ_DIR)/app/codec/codec_hal/codec_hal.c \
   $(PROJ_DIR)/app/codec/codec_buffer.c \
   $(LIB_ROOT)/nordic/components/uicr/dk_uicr.c \
   $(LIB_ROOT)/nordic/components/ble/dk_ble_advertising/dk_ble_advertising.c \
@@ -161,6 +162,7 @@ INC_FOLDERS += \
   $(PROJ_DIR) \
   $(PROJ_DIR)/app/usb \
   $(PROJ_DIR)/app/codec \
+  $(PROJ_DIR)/app/codec/codec_hal \
   $(PROJ_DIR)/config \
   $(PROJ_DIR)/ui \
   $(LIB_ROOT)/nordic/components/uicr \

@@ -13,13 +13,7 @@
 #define CODEC_H
 
 #include "dk_twi_mngr.h"
-
-typedef enum
-{
-	CODEC_MODE_OFF,
-	CODEC_MODE_BYPASS,
-	CODEC_MODE_I2S
-} codec_mode_t;
+#include "codec_common.h"
 
 typedef enum
 {

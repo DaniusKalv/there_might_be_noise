@@ -270,11 +270,17 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 			// bsp_board_led_on(LED_USB_RESUME);
 			break;
 		case APP_USBD_EVT_STARTED:
-			// bsp_board_led_on(LED_USB_START);
+			if(m_usb_event_handler != NULL)
+			{
+				m_usb_event_handler(USB_EVENT_USB_CONNECTED, 0);
+			}
 			break;
 		case APP_USBD_EVT_STOPPED:
 			app_usbd_disable();
-			// bsp_board_leds_off();
+			if(m_usb_event_handler != NULL)
+			{
+				m_usb_event_handler(USB_EVENT_USB_REMOVED, 0);
+			}
 			break;
 		case APP_USBD_EVT_POWER_DETECTED:
 			NRF_LOG_INFO("USB power detected");

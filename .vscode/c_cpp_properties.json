@@ -60,7 +60,8 @@
                 "C:/Users/Danius/Documents/EDE/embedded_workspace/nordic_workspace/_SDK/nRF5_SDK_16.0.0_98a08e2/components/libraries/usbd",
                 "C:/Users/Danius/Documents/EDE/embedded_workspace/nordic_workspace/_SDK/nRF5_SDK_16.0.0_98a08e2/integration/nrfx/legacy",
                 "C:/Users/Danius/Documents/EDE/embedded_workspace/nordic_workspace/_SDK/nRF5_SDK_16.0.0_98a08e2/components/libraries/usbd/class/audio",
-                "${workspaceFolder}/app/usb"
+                "${workspaceFolder}/app/usb",
+                "${workspaceFolder}/app/codec/codec_hal"
             ],
             "browse": {
                 "path": [
