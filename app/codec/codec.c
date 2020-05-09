@@ -177,7 +177,7 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 		{
 			if(m_event_handler != NULL)
 			{
-				m_event_handler(CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED);
+				m_event_handler(CODEC_EVT_TYPE_AUDIO_STREAM_STOPPED);
 			}
 			codec_buffer_reset();
 		}
@@ -191,7 +191,7 @@ static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
 		if(m_event_handler != NULL)
 		{
 			m_streaming_audio = true;
-			m_event_handler(CODEC_EVENT_TYPE_AUDIO_STREAM_STARTED);
+			m_event_handler(CODEC_EVT_TYPE_AUDIO_STREAM_STARTED);
 		}
 	}
 
@@ -258,6 +258,14 @@ static void codec_buffer_event_handler(codec_buffer_event_type_t event_type)
 	}
 }
 
+static void codec_hal_evt_handler(codec_evt_type_t event_type)
+{
+	if(m_event_handler != NULL)
+	{
+		m_event_handler(event_type);
+	}
+}
+
 static ret_code_t i2s_init(void)
 {
 	nrfx_i2s_config_t config = NRFX_I2S_DEFAULT_CONFIG;
@@ -287,7 +295,7 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 	err_code = i2s_init();
 	VERIFY_SUCCESS(err_code);
 
-	err_code = codec_hal_init(p_dk_twi_mngr);
+	err_code = codec_hal_init(p_dk_twi_mngr, codec_hal_evt_handler);
 	VERIFY_SUCCESS(err_code);
 
 	return NRF_SUCCESS;

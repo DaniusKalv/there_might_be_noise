@@ -14,10 +14,20 @@
 #include "boards.h"
 #include "nrf_gpio.h"
 #include "tlv320aic3106.h"
+#include "app_timer.h"
+
+#define NRF_LOG_MODULE_NAME codec_hal
+#include "nrf_log.h"
+NRF_LOG_MODULE_REGISTER();
+
+APP_TIMER_DEF(m_config_timer);
+
+#define CONFIG_TIMER_TIMEOUT APP_TIMER_TICKS(250)
 
 TLV320AIC3106_DEF(m_tlv320aic3106, NULL, DK_BSP_TLV320_I2C_ADDRESS);
 
 static codec_mode_t m_codec_mode;
+static codec_hal_evt_handler_t m_evt_handler = NULL;
 
 static void codec_pins_init(void)
 {
@@ -151,9 +161,15 @@ static ret_code_t codec_lop_init(void)
 	return NRF_SUCCESS;
 }
 
-static ret_code_t codec_mode_set(bool bypass)
+static ret_code_t codec_bypass_mode_enable(bool bypass)
 {
 	ret_code_t err_code;
+
+	err_code = tlv320aic3106_set_left_lop_m_out_mute(&m_tlv320aic3106, true);
+	VERIFY_SUCCESS(err_code);
+	
+	err_code = tlv320aic3106_set_right_lop_m_out_mute(&m_tlv320aic3106, true);
+	VERIFY_SUCCESS(err_code);
 
 	err_code = tlv320aic3106_set_line1_bypass(&m_tlv320aic3106, bypass);
 	VERIFY_SUCCESS(err_code);
@@ -167,34 +183,84 @@ static ret_code_t codec_mode_set(bool bypass)
 	err_code = tlv320aic3106_set_dac_mute(&m_tlv320aic3106, bypass);
 	VERIFY_SUCCESS(err_code);
 	
-	err_code = tlv320aic3106_set_left_lop_m_out_mute(&m_tlv320aic3106, bypass);
-	VERIFY_SUCCESS(err_code);
-	
-	err_code = tlv320aic3106_set_right_lop_m_out_mute(&m_tlv320aic3106, bypass);
-	VERIFY_SUCCESS(err_code);
-	
 	err_code = tlv320aic3106_set_left_lop_m_out_pwr_en(&m_tlv320aic3106, !bypass);
 	VERIFY_SUCCESS(err_code);
 	
 	err_code = tlv320aic3106_set_right_lop_m_out_pwr_en(&m_tlv320aic3106, !bypass);
 	VERIFY_SUCCESS(err_code);
 
+	err_code = tlv320aic3106_set_left_lop_m_out_mute(&m_tlv320aic3106, bypass);
+	VERIFY_SUCCESS(err_code);
+	
+	err_code = tlv320aic3106_set_right_lop_m_out_mute(&m_tlv320aic3106, bypass);
+	VERIFY_SUCCESS(err_code);
+
 	return NRF_SUCCESS;
 }
 
-ret_code_t codec_hal_init(dk_twi_mngr_t const * p_dk_twi_mngr)
+static bool codec_check_bypass_ready(tlv320aic3106_module_pwr_status_t * p_module_pwr_status)
+{
+	if(p_module_pwr_status->left_dac_powered_up &&
+	   p_module_pwr_status->right_dac_powered_up &&
+	   p_module_pwr_status->left_lop_m_powered_up &&
+	   p_module_pwr_status->right_lop_m_powered_up)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+static void codec_evt_handler(tlv320aic3106_evt_t * p_evt)
+{
+	switch(p_evt->type)
+	{
+		case TLV320AIC3106_EVT_TYPE_ERROR:
+			NRF_LOG_ERROR("TLV30AIC3106 error %u", p_evt->params.err_code);
+			break;
+		case TLV320AIC3106_EVT_TYPE_RX_MODULE_PWR_STATUS:
+		{
+			bool bypass_mode_ready = codec_check_bypass_ready(p_evt->params.p_module_pwr_status);
+
+			if((m_codec_mode == CODEC_MODE_BYPASS) && bypass_mode_ready)
+			{
+				app_timer_stop(m_config_timer);
+				m_evt_handler(CODEC_EVT_TYPE_BYPASS_MODE_READY);
+			}
+			else if((m_codec_mode == CODEC_MODE_I2S) && !bypass_mode_ready)
+			{
+				app_timer_stop(m_config_timer);
+				m_evt_handler(CODEC_EVT_TYPE_I2S_MODE_READY);
+			}
+		} break;
+		default:
+			break;
+	}
+}
+
+static void codec_config_timer_handler(void * p_context)
+{
+	tlv320aic3106_get_module_power_status(&m_tlv320aic3106);
+}
+
+ret_code_t codec_hal_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_hal_evt_handler_t evt_handler)
 {
 	ret_code_t err_code;
 
 	VERIFY_PARAM_NOT_NULL(p_dk_twi_mngr);
+	VERIFY_PARAM_NOT_NULL(evt_handler);
 
 	m_tlv320aic3106.p_dk_twi_mngr_instance = p_dk_twi_mngr;
+	m_evt_handler = evt_handler;
 
 	m_codec_mode = CODEC_MODE_BYPASS;
 
 	codec_pins_init();
 
-	err_code = tlv320aic3106_init(&m_tlv320aic3106, NULL);
+	err_code = app_timer_create(&m_config_timer, APP_TIMER_MODE_REPEATED, codec_config_timer_handler);
+	VERIFY_SUCCESS(err_code);
+
+	err_code = tlv320aic3106_init(&m_tlv320aic3106, codec_evt_handler);
 	VERIFY_SUCCESS(err_code);
 
 	err_code = codec_clk_init();
@@ -227,10 +293,10 @@ ret_code_t codec_hal_mode_set(codec_mode_t mode)
 	switch (mode)
 	{
 		case CODEC_MODE_BYPASS:
-			err_code = codec_mode_set(true);
+			err_code = codec_bypass_mode_enable(true);
 			break;
 		case CODEC_MODE_I2S:
-			err_code = codec_mode_set(false);
+			err_code = codec_bypass_mode_enable(false);
 			break;
 		default:
 			return NRF_ERROR_NOT_SUPPORTED;
@@ -239,6 +305,9 @@ ret_code_t codec_hal_mode_set(codec_mode_t mode)
 	VERIFY_SUCCESS(err_code);
 
 	m_codec_mode = mode;
+
+	err_code = app_timer_start(m_config_timer, CONFIG_TIMER_TIMEOUT, NULL);
+	VERIFY_SUCCESS(err_code);
 
 	return NRF_SUCCESS;
 }

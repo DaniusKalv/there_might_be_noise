@@ -15,7 +15,9 @@
 #include "dk_twi_mngr.h"
 #include "codec_common.h"
 
-ret_code_t codec_hal_init(dk_twi_mngr_t const * p_dk_twi_mngr);
+typedef void (* codec_hal_evt_handler_t)(codec_evt_type_t event_type);
+
+ret_code_t codec_hal_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_hal_evt_handler_t evt_handler);
 
 ret_code_t codec_hal_mode_set(codec_mode_t mode);
 

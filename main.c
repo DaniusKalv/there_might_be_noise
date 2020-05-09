@@ -71,8 +71,8 @@
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
-APP_TIMER_DEF(m_test_timer);
-#define TEST_TIMER_TICKS APP_TIMER_TICKS(100)
+APP_TIMER_DEF(m_amplifier_mute_timer);
+#define AMPLIFIER_MUTE_TICKS APP_TIMER_TICKS(250)
 
 DK_TWI_MNGR_DEF(m_twi_mngr_codec, TWI_MNGR_QUEUE_SIZE, DK_BSP_TLV320_I2C_ITERFACE);
 
@@ -81,6 +81,8 @@ static nrfx_spi_t m_spi = NRFX_SPI_INSTANCE(DK_BSP_OLED_SPI_INTERFACE);  /**< SP
 SH1106_DEF(m_display, &m_spi, DK_BSP_OLED_RST, DK_BSP_OLED_CS, DK_BSP_OLED_DC, 128, 64);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
+
+static codec_mode_t m_codec_target_mode = CODEC_MODE_BYPASS;
 
 /**@brief Function for putting the chip into sleep mode.
  *
@@ -671,19 +673,16 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 	{
 		case USB_EVENT_USB_CONNECTED:
 			NRF_LOG_INFO("USB_EVENT_USB_CONNECTED");
-			err_code = codec_set_mode(CODEC_MODE_I2S);
-			APP_ERROR_CHECK(err_code);
-
-			nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+			nrf_gpio_pin_clear(DK_BSP_TPA3220_MUTE);
+			m_codec_target_mode = CODEC_MODE_I2S;
+			app_timer_start(m_amplifier_mute_timer, AMPLIFIER_MUTE_TICKS, NULL);
 
 			break;
 		case USB_EVENT_USB_REMOVED:
 			NRF_LOG_INFO("USB_EVENT_USB_REMOVED");
-			err_code = codec_set_mode(CODEC_MODE_BYPASS);
-			APP_ERROR_CHECK(err_code);
-
-			// nrf_gpio_pin_clear(DK_BSP_TPA3220_MUTE);
-
+			nrf_gpio_pin_clear(DK_BSP_TPA3220_MUTE);
+			m_codec_target_mode = CODEC_MODE_BYPASS;
+			app_timer_start(m_amplifier_mute_timer, AMPLIFIER_MUTE_TICKS, NULL);
 			break;
 		case USB_EVENT_TYPE_RX_BUFFER_REQUEST:
 		{
@@ -714,19 +713,33 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 	}
 }
 
-static void codec_event_handler(codec_event_type_t event_type)
+static void codec_event_handler(codec_evt_type_t event_type)
 {
 	switch(event_type)
 	{
-		case CODEC_EVENT_TYPE_AUDIO_STREAM_STARTED:
+		case CODEC_EVT_TYPE_BYPASS_MODE_READY:
+			NRF_LOG_INFO("Codec bypass mode ready");
+			nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+			break;
+		case CODEC_EVT_TYPE_I2S_MODE_READY:
+			NRF_LOG_INFO("Codec I2S mode ready");
+			nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+			break;
+		case CODEC_EVT_TYPE_AUDIO_STREAM_STARTED:
 			NRF_LOG_INFO("Codec audio stream started");
 			break;
-		case CODEC_EVENT_TYPE_AUDIO_STREAM_STOPPED:
+		case CODEC_EVT_TYPE_AUDIO_STREAM_STOPPED:
 			NRF_LOG_INFO("Codec audio stream stopped");
 			break;
 		default:
 			break;
 	}
+}
+
+void amplifier_mute_timeout(void * p_context)
+{
+	ret_code_t err_code = codec_set_mode(m_codec_target_mode);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Function for application main entry.
@@ -748,6 +761,9 @@ int main(void)
 	NRF_LOG_PROCESS();
 
 	err_code = app_timer_init();
+	APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_create(&m_amplifier_mute_timer, APP_TIMER_MODE_SINGLE_SHOT, amplifier_mute_timeout);
 	APP_ERROR_CHECK(err_code);
 
 	nrf_gpio_cfg_output(DK_BSP_TPA3220_RST);
@@ -830,7 +846,7 @@ int main(void)
 	NRF_LOG_FLUSH();
 	nrf_delay_ms(100);
 #endif
-
+	nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
 	// advertising_start(erase_bonds);
 
 	// Enter main loop.
