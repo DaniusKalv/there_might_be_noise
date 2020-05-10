@@ -21,6 +21,8 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 
 ret_code_t codec_set_mode(codec_mode_t mode);
 
+ret_code_t codec_mute(bool mute);
+
 void * codec_get_rx_buffer(size_t size);
 
 ret_code_t codec_release_rx_buffer(size_t size);

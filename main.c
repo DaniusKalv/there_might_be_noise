@@ -665,11 +665,11 @@ static void codec_dbg(void * p_event_data, uint16_t event_size)
 	codec_debug();
 }
 
-static void usb_event_handler(usb_event_type_t event_type, size_t size)
+static void usb_event_handler(usb_event_t * p_event)
 {
 	ret_code_t err_code;
 
-	switch (event_type)
+	switch (p_event->evt_type)
 	{
 		case USB_EVENT_USB_CONNECTED:
 			NRF_LOG_INFO("USB_EVENT_USB_CONNECTED");
@@ -686,11 +686,11 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			break;
 		case USB_EVENT_TYPE_RX_BUFFER_REQUEST:
 		{
-			void * p_buffer = codec_get_rx_buffer(size);
+			void * p_buffer = codec_get_rx_buffer(p_event->params.size);
 
 			if(p_buffer != NULL)
 			{
-				usb_rx_buffer_reply(p_buffer, size);
+				usb_rx_buffer_reply(p_buffer, p_event->params.size);
 			}
 			else
 			{
@@ -700,7 +700,7 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			
 		} break;
 		case USB_EVENT_TYPE_RX_DONE:
-			err_code = codec_release_rx_buffer(size);
+			err_code = codec_release_rx_buffer(p_event->params.size);
 			APP_ERROR_CHECK(err_code);
 			break;
 		case USB_EVENT_TYPE_RX_TIMEOUT:
@@ -708,6 +708,14 @@ static void usb_event_handler(usb_event_type_t event_type, size_t size)
 			err_code = codec_release_unfinished_rx_buffer();
 			APP_ERROR_CHECK(err_code);
 			break;
+		case USB_EVENT_TYPE_MUTE_SET:
+		{
+			ret_code_t err_code;
+			NRF_LOG_INFO("Usb mute %u", p_event->params.mute);
+
+			err_code = codec_mute(p_event->params.mute);
+			APP_ERROR_CHECK(err_code);
+		} break;
 		default:
 			break;
 	}
@@ -844,9 +852,9 @@ int main(void)
 
 #ifdef DEBUG
 	NRF_LOG_FLUSH();
-	nrf_delay_ms(100);
 #endif
 	nrf_gpio_pin_set(DK_BSP_TPA3220_MUTE);
+	nrf_delay_ms(250);
 	// advertising_start(erase_bonds);
 
 	// Enter main loop.

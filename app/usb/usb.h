@@ -22,10 +22,22 @@ typedef enum
 	USB_EVENT_USB_REMOVED,
 	USB_EVENT_TYPE_RX_BUFFER_REQUEST,
 	USB_EVENT_TYPE_RX_DONE,
-	USB_EVENT_TYPE_RX_TIMEOUT
+	USB_EVENT_TYPE_RX_TIMEOUT,
+	USB_EVENT_TYPE_MUTE_STATUS_REQ,
+	USB_EVENT_TYPE_MUTE_SET
 } usb_event_type_t;
 
-typedef void (* usb_event_handler_t)(usb_event_type_t event_type, size_t size);
+typedef struct
+{
+	usb_event_type_t evt_type;
+	union
+	{
+		size_t  size;
+		bool    mute;
+	} params;
+} usb_event_t;
+
+typedef void (* usb_event_handler_t)(usb_event_t * p_event);
 
 ret_code_t usb_init(usb_event_handler_t evt_handler);
 

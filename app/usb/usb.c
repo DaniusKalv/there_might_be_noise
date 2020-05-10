@@ -27,6 +27,29 @@ NRF_LOG_MODULE_REGISTER();
 
 #define USB_RX_PACKET_SIZE 192
 
+#define USB_EVENT_TYPE_RX_DONE_DEF(rx_packet_size)  \
+{                                                   \
+	.evt_type    = USB_EVENT_TYPE_RX_DONE,          \
+	.params.size = rx_packet_size                   \
+}
+
+#define USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(rx_packet_size)    \
+{                                                               \
+	.evt_type    = USB_EVENT_TYPE_RX_BUFFER_REQUEST,            \
+	.params.size = rx_packet_size                               \
+}
+
+#define USB_EVENT_TYPE_MUTE_SET_DEF(_mute)       \
+{                                               \
+	.evt_type    = USB_EVENT_TYPE_MUTE_SET,     \
+	.params.mute = _mute                        \
+}
+
+#define USB_EVENT_DEF(event_type)   \
+{                                   \
+	.evt_type = event_type          \
+}
+
 /**
  * @brief Enable power USB detection
  *
@@ -172,15 +195,23 @@ static void spkr_audio_user_class_req(app_usbd_class_inst_t const * p_inst)
 				//Only mute control is defined
 				p_req->payload[0] = m_mute_spkr;
 				NRF_LOG_INFO("Mute spkr 1 0x%x", m_mute_spkr);
+				
 			}
 			break;
 		case APP_USBD_AUDIO_CLASS_REQ_OUT:
 
 			if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
 			{
-				//Only mute control is defined
+				if(p_req->channel == 0)
+				{
+					usb_event_t event = USB_EVENT_TYPE_MUTE_SET_DEF(p_req->payload[0]);
+					m_usb_event_handler(&event);
+				}
+
 				m_mute_spkr = p_req->payload[0];
-				NRF_LOG_INFO("Mute spkr 2 0x%x", m_mute_spkr);
+				//Only mute control is defined
+				NRF_LOG_INFO("Mute spkr 2 0x%x 0x%x", m_mute_spkr, p_req->channel);
+				// m_usb_event_handler();
 			}
 			break;
 		case APP_USBD_AUDIO_EP_REQ_IN:
@@ -218,10 +249,8 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 			err_code = app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
 			APP_ERROR_CHECK(err_code);
 
-			if(m_usb_event_handler != NULL)
-			{
-				m_usb_event_handler(USB_EVENT_TYPE_RX_DONE, m_rx_packet_size);
-			}
+			usb_event_t event = USB_EVENT_TYPE_RX_DONE_DEF(m_rx_packet_size);
+			m_usb_event_handler(&event);
 		} break;
 		default:
 			break;
@@ -241,14 +270,8 @@ static void spkr_sof_ev_handler(uint16_t framecnt)
 	{
 		ASSERT(m_rx_packet_size <= USB_RX_PACKET_SIZE);
 
-		if(m_usb_event_handler != NULL)
-		{
-			m_usb_event_handler(USB_EVENT_TYPE_RX_BUFFER_REQUEST, m_rx_packet_size);
-		}
-		else
-		{
-			NRF_LOG_ERROR("USB event handler NULL");
-		}
+		usb_event_t event = USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(m_rx_packet_size);
+		m_usb_event_handler(&event);
 	}
 }
 
@@ -270,18 +293,17 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 			// bsp_board_led_on(LED_USB_RESUME);
 			break;
 		case APP_USBD_EVT_STARTED:
-			if(m_usb_event_handler != NULL)
-			{
-				m_usb_event_handler(USB_EVENT_USB_CONNECTED, 0);
-			}
-			break;
+		{
+			usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_CONNECTED);
+			m_usb_event_handler(&event);
+		} break;
 		case APP_USBD_EVT_STOPPED:
+		{
+			usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_REMOVED);
+
 			app_usbd_disable();
-			if(m_usb_event_handler != NULL)
-			{
-				m_usb_event_handler(USB_EVENT_USB_REMOVED, 0);
-			}
-			break;
+			m_usb_event_handler(&event);
+		} break;
 		case APP_USBD_EVT_POWER_DETECTED:
 			NRF_LOG_INFO("USB power detected");
 			if (!nrf_drv_usbd_is_enabled())
@@ -304,10 +326,8 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 
 static void usb_rx_timeout_handler(void * p_context)
 {
-	if(m_usb_event_handler != NULL)
-	{
-		m_usb_event_handler(USB_EVENT_TYPE_RX_TIMEOUT, 0);
-	}
+	usb_event_t event = USB_EVENT_DEF(USB_EVENT_TYPE_RX_TIMEOUT);
+	m_usb_event_handler(&event);
 }
 
 ret_code_t usb_init(usb_event_handler_t evt_handler)

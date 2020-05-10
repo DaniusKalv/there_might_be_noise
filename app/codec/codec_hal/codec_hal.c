@@ -312,6 +312,19 @@ ret_code_t codec_hal_mode_set(codec_mode_t mode)
 	return NRF_SUCCESS;
 }
 
+ret_code_t codec_hal_mute(bool mute)
+{
+	ret_code_t err_code;
+
+	err_code = tlv320aic3106_set_left_lop_m_out_mute(&m_tlv320aic3106, mute);
+	VERIFY_SUCCESS(err_code);
+	
+	err_code = tlv320aic3106_set_right_lop_m_out_mute(&m_tlv320aic3106, mute);
+	VERIFY_SUCCESS(err_code);
+
+	return NRF_SUCCESS;
+}
+
 void codec_hal_debug(void)
 {
 	tlv320aic3106_debug(&m_tlv320aic3106);

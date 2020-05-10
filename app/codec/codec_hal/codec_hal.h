@@ -21,6 +21,8 @@ ret_code_t codec_hal_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_hal_evt_han
 
 ret_code_t codec_hal_mode_set(codec_mode_t mode);
 
+ret_code_t codec_hal_mute(bool mute);
+
 void codec_hal_debug(void);
 
 #endif // CODEC_HAL_H

@@ -306,6 +306,11 @@ ret_code_t codec_set_mode(codec_mode_t mode)
 	return codec_hal_mode_set(mode);
 }
 
+ret_code_t codec_mute(bool mute)
+{
+	return codec_hal_mute(mute);
+}
+
 void * codec_get_rx_buffer(size_t size)
 {
 	return codec_buffer_get_rx(size);
