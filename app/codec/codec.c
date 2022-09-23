@@ -25,6 +25,8 @@ NRF_LOG_MODULE_REGISTER();
 
 #define CODEC_DEBUG_INTERVAL APP_TIMER_TICKS(1000)
 
+// static int16_t warmup_data[32] = { 0 };
+
 // static int16_t test_data[2][64] =
 // {
 // 	{
@@ -164,12 +166,18 @@ NRF_LOG_MODULE_REGISTER();
 
 static codec_event_handler_t m_event_handler = NULL;
 static bool m_streaming_audio;
+static bool m_i2s_warmup = false;
 
 static void i2s_data_handler(nrfx_i2s_buffers_t const * p_released,
                              uint32_t                   status)
 {
 	VERIFY_PARAM_NOT_NULL_VOID(p_released);
 	ret_code_t err_code;
+
+	if(m_i2s_warmup) {
+		nrfx_i2s_stop();
+		m_i2s_warmup = false;
+	}
 
 	if (!(status & NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED)) // This will get called two times. For each buffer release.
 	{
@@ -279,6 +287,19 @@ static ret_code_t i2s_init(void)
 	return nrfx_i2s_init(&config, i2s_data_handler);
 }
 
+// static ret_code_t i2c_warmup()
+// {
+// 	m_i2s_warmup = true;
+
+// 	nrfx_i2s_buffers_t initial_buffers =
+// 	{
+// 		.p_tx_buffer = (uint32_t *)warmup_data,
+// 		.p_rx_buffer = NULL
+// 	};
+
+// 	return nrfx_i2s_start(&initial_buffers, (sizeof(warmup_data) / sizeof(uint32_t)), 0);
+// }
+
 ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t event_handler)
 {
 	ret_code_t err_code;
@@ -297,6 +318,8 @@ ret_code_t codec_init(dk_twi_mngr_t const * p_dk_twi_mngr, codec_event_handler_t
 
 	err_code = codec_hal_init(p_dk_twi_mngr, codec_hal_evt_handler);
 	VERIFY_SUCCESS(err_code);
+
+	// i2c_warmup();
 
 	return NRF_SUCCESS;
 }
