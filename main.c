@@ -658,12 +658,13 @@ static void log_init(void)
 
 	NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
-#endif
 
 static void codec_dbg(void * p_event_data, uint16_t event_size)
 {
 	codec_debug();
 }
+
+#endif // DEBUG
 
 static void usb_event_handler(usb_event_t * p_event)
 {
@@ -759,7 +760,7 @@ int main(void)
 #endif
 
 	ret_code_t err_code;
-	bool erase_bonds = false;
+	// bool erase_bonds = false;
 
 #ifdef DEBUG
 	log_init();
@@ -798,11 +799,6 @@ int main(void)
 	spi_config.sck_pin  = DK_BSP_OLED_SCLK;
 	err_code = nrfx_spi_init(&m_spi, &spi_config, NULL, NULL);
 	APP_ERROR_CHECK(err_code);
-
-	err_code = sh1106_init(&m_display);
-	APP_ERROR_CHECK(err_code);
-
-	sh1106_write_data(&m_display, splash_image, sizeof(splash_image));
 
 	err_code = nrfx_gpiote_init();
 	APP_ERROR_CHECK(err_code);
@@ -850,6 +846,12 @@ int main(void)
 	services_init();
 	conn_params_init();
 
+	err_code = sh1106_init(&m_display);
+	APP_ERROR_CHECK(err_code);
+
+	sh1106_write_data(&m_display, splash_image, sizeof(splash_image));
+
+	NRF_LOG_INFO("Here");
 #ifdef DEBUG
 	NRF_LOG_FLUSH();
 #endif
