@@ -30,32 +30,32 @@ jobs:
         check-path: '.'
         exclude-regex: (./_build|./config/|./libs/)
 
-#   spell-check:
-#     name: spell checker
-#     runs-on: ubuntu-latest
+  spell-check:
+    name: spell checker
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: checkout app
-#         uses: actions/checkout@v4
-#         with:
-#           token: ${{ secrets.DK_CI_TOKEN }}
-#           submodules: 'recursive'
-#           path: ${{ env.APP_PATH }}
+    steps:
+      - name: checkout app
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DK_CI_TOKEN }}
+          submodules: 'recursive'
+          path: ${{ env.APP_PATH }}
 
-#       - name: Use Node.js 21.x
-#         uses: actions/setup-node@v1
-#         with:
-#           node-version: 21.x
+      - name: Use Node.js 21.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 21.x
 
-#       - name: install cSpell
-#         id: install-cspell
-#         shell: bash
-#         run: npm install -g cspell
+      - name: install cSpell
+        id: install-cspell
+        shell: bash
+        run: npm install -g cspell
 
-#       - name: spell checking
-#         id: spell-checking
-#         working-directory: ${{ env.APP_PATH }}
-#         shell: bash
-#         run: cspell "**/*.{c,h,md}"
+      - name: spell checking
+        id: spell-checking
+        working-directory: ${{ env.APP_PATH }}
+        shell: bash
+        run: cspell "**/*.{c,h,md}"
 
 
