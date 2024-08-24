@@ -1,7 +1,7 @@
 /**
  * @file        codec_buffer.h
  * @author      Danius Kalvaitis (danius.kalvaitis@gmail.com)
- * @brief       Buffer implementation for transfering audio data to the codec.
+ * @brief       Buffer implementation for transferring audio data to the codec.
  * @version     0.1
  * @date        2020-04-12
  *

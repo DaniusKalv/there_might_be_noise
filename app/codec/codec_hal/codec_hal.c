@@ -100,12 +100,12 @@ static ret_code_t codec_dac_init(void)
     ret_code_t err_code;
 
     tlv320aic3106_datapath_setup_t            datapath_setup;
-    tlv320aic3106_dac_quiescent_current_adj_t dac_quiscient_current;
+    tlv320aic3106_dac_quiescent_current_adj_t dac_quiescent_current;
     tlv320aic3106_dac_out_switch_ctrl_t       dac_out_switch_ctrl;
     tlv320aic3106_dac_dig_volume_ctrl_t       dac_dig_vol_ctrl;
 
     memset(&datapath_setup, 0, sizeof(datapath_setup));
-    memset(&dac_quiscient_current, 0, sizeof(dac_quiscient_current));
+    memset(&dac_quiescent_current, 0, sizeof(dac_quiescent_current));
     memset(&dac_out_switch_ctrl, 0, sizeof(dac_out_switch_ctrl));
     memset(&dac_dig_vol_ctrl, 0, sizeof(dac_dig_vol_ctrl));
 
@@ -115,9 +115,9 @@ static ret_code_t codec_dac_init(void)
     err_code = tlv320aic3106_set_datapath(&m_tlv320aic3106, &datapath_setup);
     VERIFY_SUCCESS(err_code);
 
-    dac_quiscient_current.dac_quiescent_current = TLV320AIC3106_DAC_QUIESCENT_CURRENT_2_DAC_REF;
+    dac_quiescent_current.dac_quiescent_current = TLV320AIC3106_DAC_QUIESCENT_CURRENT_2_DAC_REF;
 
-    err_code = tlv320aic3106_set_dac_quiescent_current(&m_tlv320aic3106, &dac_quiscient_current);
+    err_code = tlv320aic3106_set_dac_quiescent_current(&m_tlv320aic3106, &dac_quiescent_current);
     VERIFY_SUCCESS(err_code);
 
     err_code = tlv320aic3106_set_dac_pwr(&m_tlv320aic3106, false, false);
