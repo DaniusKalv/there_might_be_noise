@@ -1,0 +1,1 @@
+![code-formatting](https://github.com/DaniusKalv/there_might_be_noise/actions/workflows/main.yml/badge.svg)
