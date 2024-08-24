@@ -57,5 +57,3 @@ jobs:
         working-directory: ${{ env.APP_PATH }}
         shell: bash
         run: cspell "**/*.{c,h,md}"
-
-
