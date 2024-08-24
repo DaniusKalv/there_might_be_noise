@@ -245,9 +245,9 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const *p_inst, app_
     }
 }
 
-static void spkr_sof_ev_handler(uint16_t framecnt)
+static void spkr_sof_ev_handler(uint16_t frame_cnt)
 {
-    UNUSED_VARIABLE(framecnt);
+    UNUSED_VARIABLE(frame_cnt);
     if (APP_USBD_STATE_Configured != app_usbd_core_state_get())
     {
         return;

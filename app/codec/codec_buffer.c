@@ -1,7 +1,7 @@
 /**
  * @file        codec_buffer.c
  * @author      Danius Kalvaitis (danius.kalvaitis@gmail.com)
- * @brief       Buffer implementation for transfering audio data to the codec.
+ * @brief       Buffer implementation for transferring audio data to the codec.
  * @version     0.1
  * @date        2020-04-12
  *
@@ -37,7 +37,7 @@ typedef uint32_t *codec_buffer_pointer_t;
 
 NRF_BALLOC_DEF(m_codec_pool, CODEC_POOL_ELEMENT_SIZE, CODEC_POOL_SIZE);
 NRF_QUEUE_DEF(codec_buffer_pointer_t, m_codec_queue, CODEC_POOL_SIZE, NRF_QUEUE_MODE_NO_OVERFLOW);
-NRF_QUEUE_DEF(codec_buffer_pointer_t, m_poped_buffer_queue, CODEC_POPPED_QUEUE_SIZE, NRF_QUEUE_MODE_NO_OVERFLOW);
+NRF_QUEUE_DEF(codec_buffer_pointer_t, m_popped_buffer_queue, CODEC_POPPED_QUEUE_SIZE, NRF_QUEUE_MODE_NO_OVERFLOW);
 
 static codec_buffer_t               m_wr_buffer, m_rxd_buffer;
 static codec_buffer_event_handler_t m_event_handler = NULL;
@@ -184,11 +184,11 @@ uint32_t *codec_buffer_get_tx(void)
         return NULL;
     }
 
-    size_t size = nrf_queue_utilization_get(&m_poped_buffer_queue);
+    size_t size = nrf_queue_utilization_get(&m_popped_buffer_queue);
     if (size >= CODEC_POPPED_QUEUE_SIZE)
     {
         uint32_t *p_released_buffer;
-        err_code = nrf_queue_pop(&m_poped_buffer_queue, (uint32_t **)&p_released_buffer);
+        err_code = nrf_queue_pop(&m_popped_buffer_queue, (uint32_t **)&p_released_buffer);
 
         if (err_code == NRF_SUCCESS)
         {
@@ -196,7 +196,7 @@ uint32_t *codec_buffer_get_tx(void)
         }
     }
 
-    err_code = nrf_queue_push(&m_poped_buffer_queue, (uint32_t **)&p_buffer);
+    err_code = nrf_queue_push(&m_popped_buffer_queue, (uint32_t **)&p_buffer);
 
     if (err_code != NRF_SUCCESS)
     {
@@ -210,7 +210,7 @@ void codec_buffer_reset(void)
 {
     uint32_t *p_buffer;
 
-    while (nrf_queue_pop(&m_poped_buffer_queue, (uint32_t **)&p_buffer) == NRF_SUCCESS)
+    while (nrf_queue_pop(&m_popped_buffer_queue, (uint32_t **)&p_buffer) == NRF_SUCCESS)
     {
         nrf_balloc_free(&m_codec_pool, (void *)p_buffer);
     }

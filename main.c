@@ -80,7 +80,7 @@ void sleep_mode_enter(void)
 {
     ret_code_t err_code;
 
-    NRF_LOG_INFO("Sleep mode entero");
+    NRF_LOG_INFO("Sleep mode enter");
 
     NRF_LOG_FINAL_FLUSH();
 
@@ -332,7 +332,7 @@ static void ble_dfu_evt_handler(ble_dfu_buttonless_evt_type_t event)
             break;
 
         case BLE_DFU_EVT_BOOTLOADER_ENTER_FAILED:
-            NRF_LOG_ERROR("Request to enter bootloader mode failed asynchroneously.");
+            NRF_LOG_ERROR("Request to enter bootloader mode failed asynchronously.");
             // TODO: Take corrective measures to resolve the issue
             //           like calling APP_ERROR_CHECK to reset the device.
             break;
@@ -353,7 +353,7 @@ static void ble_dfu_evt_handler(ble_dfu_buttonless_evt_type_t event)
 /**@brief Handler for shutdown preparation.
  *
  * @details During shutdown procedures, this function will be called at a 1 second interval
- *          untill the function returns true. When the function returns true, it means that the
+ *          until the function returns true. When the function returns true, it means that the
  *          app is ready to reset to DFU mode.
  *
  * @param[in]   event   Power manager event.
