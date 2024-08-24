@@ -28,7 +28,7 @@ jobs:
       with:
         clang-format-version: '18'
         check-path: '.'
-        exclude-regex: (./config)
+        exclude-regex: (./_build|./config/|./libs/)
 
 #   spell-check:
 #     name: spell checker
