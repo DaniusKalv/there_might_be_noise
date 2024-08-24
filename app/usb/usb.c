@@ -4,22 +4,20 @@
  * @brief       USB audio device functionality for There Might Be Noise application
  * @version     0.1
  * @date        2020-04-05
- * 
+ *
  * @copyright   Copyright (c) Danius Kalvaitis 2020 All rights reserved
- * 
+ *
  */
 
 #include "usb.h"
 
-#include "nrf_drv_usbd.h"
-#include "nrf_drv_clock.h"
-
+#include "app_timer.h"
 #include "app_usbd.h"
+#include "app_usbd_audio.h"
 #include "app_usbd_core.h"
 #include "app_usbd_string_desc.h"
-#include "app_usbd_audio.h"
-
-#include "app_timer.h"
+#include "nrf_drv_clock.h"
+#include "nrf_drv_usbd.h"
 
 #define NRF_LOG_MODULE_NAME usb
 #include "nrf_log.h"
@@ -27,28 +25,25 @@ NRF_LOG_MODULE_REGISTER();
 
 #define USB_RX_PACKET_SIZE 192
 
-#define USB_EVENT_TYPE_RX_DONE_DEF(rx_packet_size)  \
-{                                                   \
-	.evt_type    = USB_EVENT_TYPE_RX_DONE,          \
-	.params.size = rx_packet_size                   \
-}
+#define USB_EVENT_TYPE_RX_DONE_DEF(rx_packet_size)                                                                     \
+    {                                                                                                                  \
+        .evt_type = USB_EVENT_TYPE_RX_DONE, .params.size = rx_packet_size                                              \
+    }
 
-#define USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(rx_packet_size)    \
-{                                                               \
-	.evt_type    = USB_EVENT_TYPE_RX_BUFFER_REQUEST,            \
-	.params.size = rx_packet_size                               \
-}
+#define USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(rx_packet_size)                                                           \
+    {                                                                                                                  \
+        .evt_type = USB_EVENT_TYPE_RX_BUFFER_REQUEST, .params.size = rx_packet_size                                    \
+    }
 
-#define USB_EVENT_TYPE_MUTE_SET_DEF(_mute)       \
-{                                               \
-	.evt_type    = USB_EVENT_TYPE_MUTE_SET,     \
-	.params.mute = _mute                        \
-}
+#define USB_EVENT_TYPE_MUTE_SET_DEF(_mute)                                                                             \
+    {                                                                                                                  \
+        .evt_type = USB_EVENT_TYPE_MUTE_SET, .params.mute = _mute                                                      \
+    }
 
-#define USB_EVENT_DEF(event_type)   \
-{                                   \
-	.evt_type = event_type          \
-}
+#define USB_EVENT_DEF(event_type)                                                                                      \
+    {                                                                                                                  \
+        .evt_type = event_type                                                                                         \
+    }
 
 /**
  * @brief Enable power USB detection
@@ -62,17 +57,15 @@ NRF_LOG_MODULE_REGISTER();
 /**
  * @brief Audio class user event handler
  */
-static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
-                                       app_usbd_audio_user_event_t   event);
-
+static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const *p_inst, app_usbd_audio_user_event_t event);
 
 /* Channels and feature controls configuration */
 
 /**
  * @brief   Input terminal channel configuration
  */
-#define SPKR_TERMINAL_CH_CONFIG()                                                                   \
-        (APP_USBD_AUDIO_IN_TERM_CH_CONFIG_LEFT_FRONT | APP_USBD_AUDIO_IN_TERM_CH_CONFIG_RIGHT_FRONT)
+#define SPKR_TERMINAL_CH_CONFIG()                                                                                      \
+    (APP_USBD_AUDIO_IN_TERM_CH_CONFIG_LEFT_FRONT | APP_USBD_AUDIO_IN_TERM_CH_CONFIG_RIGHT_FRONT)
 
 /**
  * @brief   Feature controls
@@ -81,53 +74,52 @@ static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
  *      channel 0
  *      channel 1
  */
-#define SPKR_FEATURE_CONTROLS()                                                                                         \
-        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE), \
-        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE), \
-        APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE)
+#define SPKR_FEATURE_CONTROLS()                                                                                        \
+    APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE),                                                 \
+      APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE),                                               \
+      APP_USBD_U16_TO_RAW_DSC(APP_USBD_AUDIO_FEATURE_UNIT_CONTROL_MUTE)
 
 /**
  * @brief   Audio class specific format III descriptor
  */
-APP_USBD_AUDIO_FORMAT_DESCRIPTOR(m_spkr_form_desc, 
-                                 APP_USBD_AUDIO_AS_FORMAT_III_DSC( /* Format type 3 descriptor */
-                                 2,                                /* Number of channels */
-                                 2,                                /* Subframe size */
-                                 16,                               /* Bit resolution */
-                                 1,                                /* Frequency type */
-                                 APP_USBD_U24_TO_RAW_DSC(44100))   /* Frequency */
-                                );
+APP_USBD_AUDIO_FORMAT_DESCRIPTOR(m_spkr_form_desc,
+                                 APP_USBD_AUDIO_AS_FORMAT_III_DSC(    /* Format type 3 descriptor */
+                                                                  2,  /* Number of channels */
+                                                                  2,  /* Subframe size */
+                                                                  16, /* Bit resolution */
+                                                                  1,  /* Frequency type */
+                                                                  APP_USBD_U24_TO_RAW_DSC(44100)) /* Frequency */
+);
 
 /**
  * @brief   Audio class input terminal descriptor
  */
-APP_USBD_AUDIO_INPUT_DESCRIPTOR(m_spkr_inp_desc, 
-                                APP_USBD_AUDIO_INPUT_TERMINAL_DSC(
-                                1,                                     /* Terminal ID */
-                                APP_USBD_AUDIO_TERMINAL_USB_STREAMING, /* Terminal type */
-                                2,                                     /* Number of channels */
-                                SPKR_TERMINAL_CH_CONFIG())             /* Channels config */
-                               );
+APP_USBD_AUDIO_INPUT_DESCRIPTOR(
+  m_spkr_inp_desc,
+  APP_USBD_AUDIO_INPUT_TERMINAL_DSC(1,                                     /* Terminal ID */
+                                    APP_USBD_AUDIO_TERMINAL_USB_STREAMING, /* Terminal type */
+                                    2,                                     /* Number of channels */
+                                    SPKR_TERMINAL_CH_CONFIG())             /* Channels config */
+);
 
 /**
  * @brief   Audio class output terminal descriptor
  */
-APP_USBD_AUDIO_OUTPUT_DESCRIPTOR(m_spkr_out_desc, 
-                                 APP_USBD_AUDIO_OUTPUT_TERMINAL_DSC(
-                                 3,                                      /* Terminal ID */
-                                 APP_USBD_AUDIO_TERMINAL_OUT_SPEAKER,    /* Terminal type */
-                                 2)                                      /* Source ID */
-                                );
+APP_USBD_AUDIO_OUTPUT_DESCRIPTOR(
+  m_spkr_out_desc,
+  APP_USBD_AUDIO_OUTPUT_TERMINAL_DSC(3,                                   /* Terminal ID */
+                                     APP_USBD_AUDIO_TERMINAL_OUT_SPEAKER, /* Terminal type */
+                                     2)                                   /* Source ID */
+);
 
 /**
  * @brief   Audio class feature unit descriptor
  */
-APP_USBD_AUDIO_FEATURE_DESCRIPTOR(m_spkr_fea_desc, 
-                                  APP_USBD_AUDIO_FEATURE_UNIT_DSC(
-                                  2,                       /* Unit ID */
-                                  1,                       /* Source ID */
-                                  SPKR_FEATURE_CONTROLS()) /* List of controls */
-                                 );
+APP_USBD_AUDIO_FEATURE_DESCRIPTOR(m_spkr_fea_desc,
+                                  APP_USBD_AUDIO_FEATURE_UNIT_DSC(2,                       /* Unit ID */
+                                                                  1,                       /* Source ID */
+                                                                  SPKR_FEATURE_CONTROLS()) /* List of controls */
+);
 
 /* Interfaces lists */
 
@@ -150,13 +142,11 @@ APP_USBD_AUDIO_GLOBAL_DEF(m_app_audio_speakers,
                           APP_USBD_AUDIO_AS_IFACE_FORMAT_PCM,
                           USB_RX_PACKET_SIZE,
                           APP_USBD_AUDIO_SUBCLASS_AUDIOSTREAMING,
-                          1
-                         );
-
+                          1);
 
 APP_TIMER_DEF(m_rx_timeout_timer);
 
-#define USB_RX_TIMEOUT  APP_TIMER_TICKS(2)
+#define USB_RX_TIMEOUT APP_TIMER_TICKS(2)
 
 /**
  * @brief The size of last received block from
@@ -175,104 +165,102 @@ static uint32_t m_freq_spkr;
 
 static usb_event_handler_t m_usb_event_handler = NULL;
 
-
 /**
  * @brief Audio class specific request handle (speakers)
  */
-static void spkr_audio_user_class_req(app_usbd_class_inst_t const * p_inst)
+static void spkr_audio_user_class_req(app_usbd_class_inst_t const *p_inst)
 {
-	app_usbd_audio_t const * p_audio = app_usbd_audio_class_get(p_inst);
-	app_usbd_audio_req_t * p_req = app_usbd_audio_class_request_get(p_audio);
+    app_usbd_audio_t const *p_audio = app_usbd_audio_class_get(p_inst);
+    app_usbd_audio_req_t   *p_req   = app_usbd_audio_class_request_get(p_audio);
 
-	UNUSED_VARIABLE(m_mute_spkr);
-	UNUSED_VARIABLE(m_freq_spkr);
+    UNUSED_VARIABLE(m_mute_spkr);
+    UNUSED_VARIABLE(m_freq_spkr);
 
-	switch (p_req->req_target)
-	{
-		case APP_USBD_AUDIO_CLASS_REQ_IN:
-			if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
-			{
-				//Only mute control is defined
-				p_req->payload[0] = m_mute_spkr;
-				NRF_LOG_INFO("Mute spkr 1 0x%x", m_mute_spkr);
-				
-			}
-			break;
-		case APP_USBD_AUDIO_CLASS_REQ_OUT:
+    switch (p_req->req_target)
+    {
+        case APP_USBD_AUDIO_CLASS_REQ_IN:
+            if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
+            {
+                // Only mute control is defined
+                p_req->payload[0] = m_mute_spkr;
+                NRF_LOG_INFO("Mute spkr 1 0x%x", m_mute_spkr);
+            }
+            break;
+        case APP_USBD_AUDIO_CLASS_REQ_OUT:
 
-			if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
-			{
-				if(p_req->channel == 0)
-				{
-					usb_event_t event = USB_EVENT_TYPE_MUTE_SET_DEF(p_req->payload[0]);
-					m_usb_event_handler(&event);
-				}
+            if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
+            {
+                if (p_req->channel == 0)
+                {
+                    usb_event_t event = USB_EVENT_TYPE_MUTE_SET_DEF(p_req->payload[0]);
+                    m_usb_event_handler(&event);
+                }
 
-				m_mute_spkr = p_req->payload[0];
-				//Only mute control is defined
-				NRF_LOG_INFO("Mute spkr 2 0x%x 0x%x", m_mute_spkr, p_req->channel);
-				// m_usb_event_handler();
-			}
-			break;
-		case APP_USBD_AUDIO_EP_REQ_IN:
-			break;
-		case APP_USBD_AUDIO_EP_REQ_OUT:
-			if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
-			{
-				//Only set frequency is supported
-				m_freq_spkr = uint24_decode(p_req->payload);
-			}
-			break;
-		default:
-			break;
-	}
+                m_mute_spkr = p_req->payload[0];
+                // Only mute control is defined
+                NRF_LOG_INFO("Mute spkr 2 0x%x 0x%x", m_mute_spkr, p_req->channel);
+                // m_usb_event_handler();
+            }
+            break;
+        case APP_USBD_AUDIO_EP_REQ_IN:
+            break;
+        case APP_USBD_AUDIO_EP_REQ_OUT:
+            if (p_req->req_type == APP_USBD_AUDIO_REQ_SET_CUR)
+            {
+                // Only set frequency is supported
+                m_freq_spkr = uint24_decode(p_req->payload);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 /**
  * @brief User event handler @ref app_usbd_audio_user_ev_handler_t (speaker)
  */
-static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const * p_inst,
-                                       app_usbd_audio_user_event_t   event)
+static void spkr_audio_user_ev_handler(app_usbd_class_inst_t const *p_inst, app_usbd_audio_user_event_t event)
 {
-	ret_code_t err_code;
-	app_usbd_audio_t const * p_audio = app_usbd_audio_class_get(p_inst);
-	UNUSED_VARIABLE(p_audio);
-	switch (event)
-	{
-		case APP_USBD_AUDIO_USER_EVT_CLASS_REQ:
-			spkr_audio_user_class_req(p_inst);
-			break;
-		case APP_USBD_AUDIO_USER_EVT_RX_DONE:
-		{
-			err_code = app_timer_stop(m_rx_timeout_timer); // TODO
-			APP_ERROR_CHECK(err_code);
-			err_code = app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
-			APP_ERROR_CHECK(err_code);
+    ret_code_t              err_code;
+    app_usbd_audio_t const *p_audio = app_usbd_audio_class_get(p_inst);
+    UNUSED_VARIABLE(p_audio);
+    switch (event)
+    {
+        case APP_USBD_AUDIO_USER_EVT_CLASS_REQ:
+            spkr_audio_user_class_req(p_inst);
+            break;
+        case APP_USBD_AUDIO_USER_EVT_RX_DONE:
+            {
+                err_code = app_timer_stop(m_rx_timeout_timer);                        // TODO
+                APP_ERROR_CHECK(err_code);
+                err_code = app_timer_start(m_rx_timeout_timer, USB_RX_TIMEOUT, NULL); // TODO
+                APP_ERROR_CHECK(err_code);
 
-			usb_event_t event = USB_EVENT_TYPE_RX_DONE_DEF(m_rx_packet_size);
-			m_usb_event_handler(&event);
-		} break;
-		default:
-			break;
-	}
+                usb_event_t event = USB_EVENT_TYPE_RX_DONE_DEF(m_rx_packet_size);
+                m_usb_event_handler(&event);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 static void spkr_sof_ev_handler(uint16_t framecnt)
 {
-	UNUSED_VARIABLE(framecnt);
-	if (APP_USBD_STATE_Configured != app_usbd_core_state_get())
-	{
-		return;
-	}
-	m_rx_packet_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
+    UNUSED_VARIABLE(framecnt);
+    if (APP_USBD_STATE_Configured != app_usbd_core_state_get())
+    {
+        return;
+    }
+    m_rx_packet_size = app_usbd_audio_class_rx_size_get(&m_app_audio_speakers.base);
 
-	if (m_rx_packet_size > 0)
-	{
-		ASSERT(m_rx_packet_size <= USB_RX_PACKET_SIZE);
+    if (m_rx_packet_size > 0)
+    {
+        ASSERT(m_rx_packet_size <= USB_RX_PACKET_SIZE);
 
-		usb_event_t event = USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(m_rx_packet_size);
-		m_usb_event_handler(&event);
-	}
+        usb_event_t event = USB_EVENT_TYPE_RX_BUFFER_REQUEST_DEF(m_rx_packet_size);
+        m_usb_event_handler(&event);
+    }
 }
 
 /**
@@ -282,105 +270,100 @@ static void spkr_sof_ev_handler(uint16_t framecnt)
  */
 static void usbd_user_ev_handler(app_usbd_event_type_t event)
 {
-	switch (event)
-	{
-		case APP_USBD_EVT_DRV_SOF:
-			break;
-		case APP_USBD_EVT_DRV_SUSPEND:
-			// bsp_board_leds_off();
-			break;
-		case APP_USBD_EVT_DRV_RESUME:
-			// bsp_board_led_on(LED_USB_RESUME);
-			break;
-		case APP_USBD_EVT_STARTED:
-		{
-			usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_CONNECTED);
-			m_usb_event_handler(&event);
-		} break;
-		case APP_USBD_EVT_STOPPED:
-		{
-			usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_REMOVED);
+    switch (event)
+    {
+        case APP_USBD_EVT_DRV_SOF:
+            break;
+        case APP_USBD_EVT_DRV_SUSPEND:
+            // bsp_board_leds_off();
+            break;
+        case APP_USBD_EVT_DRV_RESUME:
+            // bsp_board_led_on(LED_USB_RESUME);
+            break;
+        case APP_USBD_EVT_STARTED:
+            {
+                usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_CONNECTED);
+                m_usb_event_handler(&event);
+            }
+            break;
+        case APP_USBD_EVT_STOPPED:
+            {
+                usb_event_t event = USB_EVENT_DEF(USB_EVENT_USB_REMOVED);
 
-			app_usbd_disable();
-			m_usb_event_handler(&event);
-		} break;
-		case APP_USBD_EVT_POWER_DETECTED:
-			NRF_LOG_INFO("USB power detected");
-			if (!nrf_drv_usbd_is_enabled())
-			{
-				app_usbd_enable();
-			}
-			break;
-		case APP_USBD_EVT_POWER_REMOVED:
-			NRF_LOG_INFO("USB power removed");
-			app_usbd_stop();
-			break;
-		case APP_USBD_EVT_POWER_READY:
-			NRF_LOG_INFO("USB ready");
-			app_usbd_start();
-			break;
-		default:
-			break;
-	}
+                app_usbd_disable();
+                m_usb_event_handler(&event);
+            }
+            break;
+        case APP_USBD_EVT_POWER_DETECTED:
+            NRF_LOG_INFO("USB power detected");
+            if (!nrf_drv_usbd_is_enabled())
+            {
+                app_usbd_enable();
+            }
+            break;
+        case APP_USBD_EVT_POWER_REMOVED:
+            NRF_LOG_INFO("USB power removed");
+            app_usbd_stop();
+            break;
+        case APP_USBD_EVT_POWER_READY:
+            NRF_LOG_INFO("USB ready");
+            app_usbd_start();
+            break;
+        default:
+            break;
+    }
 }
 
-static void usb_rx_timeout_handler(void * p_context)
+static void usb_rx_timeout_handler(void *p_context)
 {
-	usb_event_t event = USB_EVENT_DEF(USB_EVENT_TYPE_RX_TIMEOUT);
-	m_usb_event_handler(&event);
+    usb_event_t event = USB_EVENT_DEF(USB_EVENT_TYPE_RX_TIMEOUT);
+    m_usb_event_handler(&event);
 }
 
 ret_code_t usb_init(usb_event_handler_t evt_handler)
 {
-	ret_code_t ret;
+    ret_code_t ret;
 
-	static const app_usbd_config_t usbd_config = {
-		.ev_state_proc = usbd_user_ev_handler,
-		.enable_sof = true
-	};
+    static const app_usbd_config_t usbd_config = {.ev_state_proc = usbd_user_ev_handler, .enable_sof = true};
 
-	VERIFY_PARAM_NOT_NULL(evt_handler);
+    VERIFY_PARAM_NOT_NULL(evt_handler);
 
-	m_usb_event_handler = evt_handler;
+    m_usb_event_handler = evt_handler;
 
-	ret = app_timer_create(&m_rx_timeout_timer, APP_TIMER_MODE_SINGLE_SHOT, usb_rx_timeout_handler);
-	VERIFY_SUCCESS(ret);
+    ret = app_timer_create(&m_rx_timeout_timer, APP_TIMER_MODE_SINGLE_SHOT, usb_rx_timeout_handler);
+    VERIFY_SUCCESS(ret);
 
-	nrf_drv_clock_init();
+    nrf_drv_clock_init();
 
-	ret = app_usbd_init(&usbd_config);
-	VERIFY_SUCCESS(ret);
+    ret = app_usbd_init(&usbd_config);
+    VERIFY_SUCCESS(ret);
 
-	app_usbd_class_inst_t const * class_inst_spkr =
-	    app_usbd_audio_class_inst_get(&m_app_audio_speakers);
+    app_usbd_class_inst_t const *class_inst_spkr = app_usbd_audio_class_inst_get(&m_app_audio_speakers);
 
-	ret = app_usbd_audio_sof_interrupt_register(class_inst_spkr, spkr_sof_ev_handler);
-	VERIFY_SUCCESS(ret);
+    ret = app_usbd_audio_sof_interrupt_register(class_inst_spkr, spkr_sof_ev_handler);
+    VERIFY_SUCCESS(ret);
 
-	ret = app_usbd_class_append(class_inst_spkr);
-	VERIFY_SUCCESS(ret);
+    ret = app_usbd_class_append(class_inst_spkr);
+    VERIFY_SUCCESS(ret);
 
-	return app_usbd_power_events_enable();
+    return app_usbd_power_events_enable();
 }
 
-void usb_rx_buffer_reply(void * p_buff, size_t size)
+void usb_rx_buffer_reply(void *p_buff, size_t size)
 {
-	ret_code_t ret;
-	ret = app_usbd_audio_class_rx_start(&m_app_audio_speakers.base, p_buff, size);
+    ret_code_t ret;
+    ret = app_usbd_audio_class_rx_start(&m_app_audio_speakers.base, p_buff, size);
 
-	if(ret != NRF_SUCCESS)
-	{
-		NRF_LOG_ERROR("Could not start an RX transfer");
-	}
+    if (ret != NRF_SUCCESS)
+    {
+        NRF_LOG_ERROR("Could not start an RX transfer");
+    }
 }
 
-bool usb_event_queue_process(void)
-{
-	return app_usbd_event_queue_process();
-}
+bool usb_event_queue_process(void) { return app_usbd_event_queue_process(); }
 
 void usb_stop(void)
 {
-	// app_usbd_stop();
-	app_usbd_disable();
+    // app_usbd_stop();
+    app_usbd_disable();
 }

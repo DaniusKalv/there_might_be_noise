@@ -1,3 +1,4 @@
 # ignore third_party code from clang-format checks
 ./_build
 ./libs
+./config
