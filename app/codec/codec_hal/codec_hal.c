@@ -116,15 +116,15 @@ static ret_code_t codec_dac_init(void)
 
 	dac_quiscient_current.dac_quiescent_current = TLV320AIC3106_DAC_QUIESCENT_CURRENT_2_DAC_REF;
 
-	err_code = tlv320aic3106_set_dac_quiescient_current(&m_tlv320aic3106, &dac_quiscient_current);
+	err_code = tlv320aic3106_set_dac_quiescent_current(&m_tlv320aic3106, &dac_quiscient_current);
 	VERIFY_SUCCESS(err_code);
 
 	err_code = tlv320aic3106_set_dac_pwr(&m_tlv320aic3106, false, false);
 	VERIFY_SUCCESS(err_code);
 
 	dac_out_switch_ctrl.dac_dig_vol_ctrl     = TLV320AIC3106_DAC_DIG_VOL_CTRL_LEFT_FOLLOWS_RIGHT_CHANNEL;
-	dac_out_switch_ctrl.left_dac_out_switch  = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X1;
-	dac_out_switch_ctrl.right_dac_out_switch = TLV320AIC3106_XDAC_OUT_SWITCH_DAC_X1;
+	dac_out_switch_ctrl.left_dac_out_switch  = TLV320AIC3106_DAC_OUT_SWITCH_DAC_X1;
+	dac_out_switch_ctrl.right_dac_out_switch = TLV320AIC3106_DAC_OUT_SWITCH_DAC_X1;
 
 	err_code = tlv320aic3106_set_dac_out_switch_ctrl(&m_tlv320aic3106, &dac_out_switch_ctrl);
 	VERIFY_SUCCESS(err_code);
