@@ -1,52 +1,47 @@
-BOARD               := DK_01017
-PROJECT_NAME        := there_might_be_noise
-FULL_PROJECT_NAME   := $(PROJECT_NAME)_$(BOARD)
-TARGETS             := $(FULL_PROJECT_NAME)_debug $(FULL_PROJECT_NAME)_release
-LINKER_SCRIPT_FILE  := there_might_be_noise_gcc_nrf52.ld
+BOARD : = DK_01017 PROJECT_NAME : = there_might_be_noise FULL_PROJECT_NAME : = $(PROJECT_NAME) _$(BOARD) TARGETS
+    :                                                                        = $(FULL_PROJECT_NAME) _debug
+         $(FULL_PROJECT_NAME)
+_release LINKER_SCRIPT_FILE : = there_might_be_noise_gcc_nrf52.ld
 
-# Version information variables
-APP_ID                      := 1
-APP_VERSION                 := 1
-BOOTLOADER_VERSION          := 1
-BOOTLOADER_SETTINGS_VERSION := 1
-HW_ID                       := 17
-HW_VERSION                  := 1
-SD_REQ                      := 0xb7
-SD_ID                       := 0xb7
+#Version information variables
+                                  APP_ID : = 1 APP_VERSION : = 1 BOOTLOADER_VERSION : = 1 BOOTLOADER_SETTINGS_VERSION
+    : = 1 HW_ID : = 17 HW_VERSION : = 1 SD_REQ : = 0xb7 SD_ID : = 0xb7
 
-# This variable can be commented out if no particular debugger is being targeted
-# DEBUGER_S_NUMBER   := 682151398
+#This variable can be commented out if no particular debugger is being targeted
+#DEBUGER_S_NUMBER : = 682151398
 
-OUTPUT_DIRECTORY          := _build
-BOOT_SETTINGS_DIRECTORY   := $(OUTPUT_DIRECTORY)/_boot_settings
-DFU_DIRECTORY             := $(OUTPUT_DIRECTORY)/_dfu
-HEX_DIRECTORY             := $(OUTPUT_DIRECTORY)/_hex
+                                                                OUTPUT_DIRECTORY : = _build BOOT_SETTINGS_DIRECTORY
+    : = $(OUTPUT_DIRECTORY) / _boot_settings DFU_DIRECTORY : = $(OUTPUT_DIRECTORY) / _dfu HEX_DIRECTORY
+    :                                                        = $(OUTPUT_DIRECTORY) / _hex
 
-LIB_ROOT := ./libs/dk_c_lib
-SDK_ROOT := ../_SDK/nRF5_SDK_16.0.0_98a08e2
-PROJ_DIR := .
+                                LIB_ROOT
+    : =./ libs / dk_c_lib       SDK_ROOT : =../ _SDK / nRF5_SDK_16 .0.0_98a08e2 PROJ_DIR : =.
 
-# Soft device
-SOFT_DEVICE_PATH  := $(SDK_ROOT)/components/softdevice/s140/hex/
-SOFT_DEVICE_NAME  := s140_nrf52_7.0.1_softdevice.hex
-SOFT_DEVICE       := $(SOFT_DEVICE_PATH)$(SOFT_DEVICE_NAME)
+#Soft device
+                                                                                      SOFT_DEVICE_PATH
+    :                      = $(SDK_ROOT) / components / softdevice / s140 / hex /
+        SOFT_DEVICE_NAME : = s140_nrf52_7 .0.1_softdevice.hex SOFT_DEVICE : = $(SOFT_DEVICE_PATH) $(SOFT_DEVICE_NAME)
 
-# Application
-APPLICATION_DEBUG   := $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_debug.hex
-APPLICATION_RELEASE := $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_release.hex
+#Application
+                                                                              APPLICATION_DEBUG
+    : = $(OUTPUT_DIRECTORY) / $(FULL_PROJECT_NAME) _debug.hex APPLICATION_RELEASE
+    : = $(OUTPUT_DIRECTORY) / $(FULL_PROJECT_NAME) _release.hex
 
-# Bootloader
-BOOTLOADER          := ../nrf52_bootloader/dk_010017/_build/secure_bootloader_THERE_MIGHT_BE_NOISE_V1_release.hex
+#Bootloader
+                                BOOTLOADER : =../ nrf52_bootloader / dk_010017 / _build /
+                                              secure_bootloader_THERE_MIGHT_BE_NOISE_V1_release.hex
 
-# Configuration files
-SDK_CONFIG_FILE   := ./config/sdk_config.h
-CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar
+#Configuration files
+                                                SDK_CONFIG_FILE
+    : =./ config / sdk_config.h                 CMSIS_CONFIG_TOOL : = $(SDK_ROOT) / external_tools / cmsisconfig /
+                                                      CMSIS_Configuration_Wizard.jar
 
-# DK DFU public key
-DK_DFU_PUBLIC_KEY  := $(LIB_ROOT)/nordic/components/dfu/dk_dfu_public_key.pem
+#DK DFU public key
+                                                        DK_DFU_PUBLIC_KEY
+    : = $(LIB_ROOT) / nordic / components / dfu /
+        dk_dfu_public_key.pem
 
-ifneq ($(DEBUGER_S_NUMBER),)
-	DEBUGER_S_NUMBER  := -s $(DEBUGER_S_NUMBER)
+        ifneq($(DEBUGER_S_NUMBER), ) DEBUGER_S_NUMBER : = -s $(DEBUGER_S_NUMBER)
 endif
 
 $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_debug.out: \
@@ -55,7 +50,7 @@ $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_debug.out: \
 $(OUTPUT_DIRECTORY)/$(FULL_PROJECT_NAME)_release.out: \
   LINKER_SCRIPT := $(LINKER_SCRIPT_FILE)
 
-# Source files common to all targets
+#Source files common to all targets
 SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/app/usb/usb.c \
@@ -155,9 +150,9 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu.c \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu_bonded.c \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu_unbonded.c \
-  $(SDK_ROOT)/components/libraries/bootloader/dfu/nrf_dfu_svci.c \
+  $(SDK_ROOT)/components/libraries/bootloader/dfu/nrf_dfu_svci.c
 
-# Include folders common to all targets
+#Include folders common to all targets
 INC_FOLDERS += \
   $(PROJ_DIR) \
   $(PROJ_DIR)/app/usb \
@@ -287,12 +282,12 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_services/ble_hrs \
   $(SDK_ROOT)/components/libraries/bootloader \
   $(SDK_ROOT)/components/libraries/bootloader/dfu \
-  $(SDK_ROOT)/external/utf_converter \
+  $(SDK_ROOT)/external/utf_converter
 
-# Libraries common to all targets
-LIB_FILES += \
+#Libraries common to all targets
+LIB_FILES +=
 
-# Target specific flags
+#Target specific flags
 $(FULL_PROJECT_NAME)_debug: OPT = -O3 -g3
 $(FULL_PROJECT_NAME)_debug: CFLAGS += $(OPT)
 $(FULL_PROJECT_NAME)_debug: CFLAGS += -DDEBUG
@@ -300,10 +295,10 @@ $(FULL_PROJECT_NAME)_release: OPT = -Os -g3
 $(FULL_PROJECT_NAME)_release: CFLAGS += $(OPT)
 $(FULL_PROJECT_NAME)_release: CFLAGS += -Werror # Turn warnings into errors
 
-# Uncomment the line below to enable link time optimization
+#Uncomment the line below to enable link time optimization
 #OPT += -flto
 
-# C flags common to all targets
+#C flags common to                 all targets
 CFLAGS += -D$(BOARD)
 CFLAGS += -DDEVICE_APP_ID=$(APP_ID)
 CFLAGS += -DDEVICE_APP_V=$(APP_VERSION)
@@ -323,11 +318,11 @@ CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -Wall
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# keep every function in a separate section, this allows linker to discard unused ones
+#keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
 
-# Assembler flags common to all targets
+#Assembler flags common to all targets
 ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
@@ -348,14 +343,14 @@ ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
 ASMFLAGS += -DS140
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 
-# Linker flags
+#Linker flags
 LDFLAGS += $(OPT)
 LDFLAGS += -mthumb -mabi=aapcs -L$(SDK_ROOT)/modules/nrfx/mdk -T$(LINKER_SCRIPT)
 LDFLAGS += -mcpu=cortex-m4
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# let linker dump unused sections
+#let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
-# use newlib in nano version
+#use newlib in   nano version
 LDFLAGS += --specs=nano.specs
 
 CFLAGS += -D__HEAP_SIZE=8192
@@ -363,13 +358,13 @@ CFLAGS += -D__STACK_SIZE=8192
 ASMFLAGS += -D__HEAP_SIZE=8192
 ASMFLAGS += -D__STACK_SIZE=8192
 
-# Add standard libraries at the very end of the linker input, after all objects
-# that may need symbols provided by these libraries.
+#Add standard libraries at the very end of the linker input, after all objects
+#that may need symbols provided by these libraries.
 LIB_FILES += -lc -lnosys -lm
 
 .PHONY: default release
 
-# Default target - first one defined
+#Default target - first one defined
 default: $(FULL_PROJECT_NAME)_debug
 
 release: $(FULL_PROJECT_NAME)_release
@@ -380,5 +375,5 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-# Include DK makefile which is common for all projects
+#Include DK makefile which is common for all projects
 include $(LIB_ROOT)/nordic/toolchain/DKMakefile.common

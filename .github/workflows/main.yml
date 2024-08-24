@@ -1,0 +1,61 @@
+# main workflow to run on code for checking
+name: code formatting
+
+# run on every commit to master and on every PR and subsequent commit on the PR
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/main.yml'
+  release:
+    types: [created, published, edited]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  APP_PATH: ${{ github.workspace }}/app
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  code-formatting:
+    name: code formatting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.13.0
+      with:
+        clang-format-version: '18'
+        check-path: '.'
+        exclude-regex: (./_build|./config/|./libs/)
+
+#   spell-check:
+#     name: spell checker
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: checkout app
+#         uses: actions/checkout@v4
+#         with:
+#           token: ${{ secrets.DK_CI_TOKEN }}
+#           submodules: 'recursive'
+#           path: ${{ env.APP_PATH }}
+
+#       - name: Use Node.js 21.x
+#         uses: actions/setup-node@v1
+#         with:
+#           node-version: 21.x
+
+#       - name: install cSpell
+#         id: install-cspell
+#         shell: bash
+#         run: npm install -g cspell
+
+#       - name: spell checking
+#         id: spell-checking
+#         working-directory: ${{ env.APP_PATH }}
+#         shell: bash
+#         run: cspell "**/*.{c,h,md}"
+
+
