@@ -1,4 +1,6 @@
+# build
 _build/
+/build*/
 
 # VS code configuration
 .vscode
